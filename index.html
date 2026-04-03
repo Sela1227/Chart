@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>病歷整理器 V6.3 Web</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            /* 北歐簡潔配色 */
+            --primary: #F97316;          /* 橘色 - 僅用於 logo 和重點 */
+            --primary-hover: #EA580C;
+            --bg-main: #F8FAFC;          /* 主背景 - 極淺灰 */
+            --bg-card: #FFFFFF;          /* 卡片背景 - 白色 */
+            --bg-secondary: #F1F5F9;     /* 次要背景 - 淺灰 */
+            --bg-tertiary: #E2E8F0;      /* 第三層背景 */
+            --text-primary: #1E293B;     /* 主要文字 - 深灰 */
+            --text-secondary: #64748B;   /* 次要文字 - 霧灰 */
+            --text-muted: #94A3B8;       /* 淡化文字 */
+            --border: #E2E8F0;           /* 邊框色 */
+            --border-focus: #94A3B8;     /* 聚焦邊框 */
+            --danger: #DC2626;
+            --success: #16A34A;
+            --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+            --shadow-lg: 0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.03);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* SVG Icons */
+        .icon {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            flex-shrink: 0;
+        }
+        
+        .icon-sm { width: 16px; height: 16px; }
+        .icon-lg { width: 24px; height: 24px; }
+        
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            padding: 20px 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        
+        .header-text h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .header-text .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        
+        .header-right {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-card);
+            padding: 8px;
+            border-radius: 12px 12px 0 0;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow);
+        }
+        
+        .tab-btn {
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .tab-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .tab-btn.active {
+            background: var(--text-primary);
+            color: var(--bg-card);
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 0 0 12px 12px;
+            box-shadow: var(--shadow);
+            min-height: 520px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        input[type="text"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 200px;
+            line-height: 1.6;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 18px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--text-primary);
+            color: var(--bg-card);
+            border-color: var(--text-primary);
+        }
+        
+        .btn-primary:hover {
+            background: #334155;
+        }
+        
+        .btn-accent {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .btn-accent:hover {
+            background: var(--primary-hover);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border-color: var(--border);
+            color: var(--text-secondary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border-focus);
+            color: var(--text-primary);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* Checkbox */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--text-primary);
+        }
+        
+        .checkbox-group label {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        
+        /* Two Column Layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+            .container { padding: 16px; }
+            .header { flex-direction: column; text-align: center; }
+            .header-right { text-align: center; }
+        }
+        
+        /* Template List */
+        .template-section h4 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        
+        .template-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        
+        .template-btn {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .template-btn:hover {
+            border-color: var(--border-focus);
+            background: var(--bg-secondary);
+        }
+        
+        .template-btn.selected {
+            border-color: var(--primary);
+            background: #FFF7ED;
+            color: var(--text-primary);
+        }
+        
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+        
+        .data-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .data-table tr:hover td {
+            background: var(--bg-main);
+        }
+        
+        .data-table td {
+            color: var(--text-primary);
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .icon-btn {
+            padding: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .icon-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .icon-btn.danger:hover {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+        
+        /* Editor Panel */
+        .editor-panel {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid var(--border);
+        }
+        
+        .editor-panel.active {
+            display: block;
+        }
+        
+        .editor-panel h4 {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        /* Bottom Bar */
+        .bottom-bar {
+            background: var(--bg-card);
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--text-primary);
+            color: var(--bg-card);
+            padding: 14px 24px;
+            border-radius: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .toast.error {
+            background: var(--danger);
+        }
+        
+        /* Helper Text */
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .inline-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .inline-row .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        /* Table Container */
+        .table-container {
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+        
+        /* Preview Textarea */
+        #previewText {
+            min-height: 420px;
+            font-family: 'Noto Sans TC', monospace;
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-focus);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* PDF Export Hidden Area */
+        #pdfContent {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 800px;
+            padding: 40px;
+            background: white;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <img src="logo.jpg" alt="SELA Logo" class="logo">
+                <div class="header-text">
+                    <h1>病歷整理器 V6.3</h1>
+                    <div class="subtitle">彰濱癌症中心 · Chang Bing Show Chwan Memorial Hospital</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div>© SELA</div>
+                <div>Radiation Oncology</div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="prompt">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Prompt
+            </button>
+            <button class="tab-btn" data-tab="patient">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                病人資料
+            </button>
+            <button class="tab-btn" data-tab="summary">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                病摘
+            </button>
+            <button class="tab-btn" data-tab="lab">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M8 18v-1"/><path d="M16 18v-3"/></svg>
+                檢驗資料
+            </button>
+            <button class="tab-btn" data-tab="pathology">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                病理報告
+            </button>
+            <button class="tab-btn" data-tab="imaging">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                影像報告
+            </button>
+            <button class="tab-btn" data-tab="preview">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                預覽輸出
+            </button>
+        </div>
+        
+        <!-- Tab Contents -->
+        <!-- Prompt Tab -->
+        <div class="tab-content active" id="tab-prompt">
+            <div class="two-col">
+                <div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="includePrompt" checked>
+                        <label for="includePrompt">輸出時包含 Prompt</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="promptText">Prompt 編輯區</label>
+                        <textarea id="promptText" rows="15" placeholder="在此輸入 Prompt 內容..."></textarea>
+                    </div>
+                </div>
+                <div class="template-section">
+                    <h4>範本清單</h4>
+                    <div class="template-list" id="templateList"></div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label for="templateName">範本名稱</label>
+                        <input type="text" id="templateName" placeholder="輸入範本名稱">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="saveTemplateContent()">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            儲存範本
+                        </button>
+                        <button class="btn btn-outline" onclick="renameTemplate()">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            重命名
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Patient Tab -->
+        <div class="tab-content" id="tab-patient">
+            <div class="helper-text">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                若有填姓名 / 病歷號，匯出時會自動加入檔名；ECOG / 衰弱量表為選填。
+            </div>
+            <div class="form-group">
+                <label for="patientName">姓名（非必填）</label>
+                <input type="text" id="patientName" placeholder="輸入病人姓名" style="max-width: 480px;">
+            </div>
+            <div class="form-group">
+                <label for="patientMRN">病歷號（非必填）</label>
+                <input type="text" id="patientMRN" placeholder="輸入病歷號" style="max-width: 480px;">
+            </div>
+            <div class="inline-row">
+                <div class="form-group">
+                    <label for="ecog">ECOG（選填）</label>
+                    <select id="ecog" style="max-width: 220px;">
+                        <option value="">不填</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="cfs">衰弱量表（選填）</label>
+                    <select id="cfs" style="max-width: 280px;">
+                        <option value="">不填</option>
+                        <option value="1">1：非常健壯</option>
+                        <option value="2">2：健康良好</option>
+                        <option value="3">3：日常可自理</option>
+                        <option value="4">4：脆弱但尚可自理</option>
+                        <option value="5">5：輕度衰弱</option>
+                        <option value="6">6：中度衰弱</option>
+                        <option value="7">7：重度衰弱</option>
+                        <option value="8">8：極重度衰弱</option>
+                        <option value="9">9：末期病人</option>
+                    </select>
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="maskInfo">
+                <label for="maskInfo">匯出時遮蔽病人姓名與病歷號（檔名不遮蔽）</label>
+            </div>
+            <button class="btn btn-outline" onclick="clearPatientTab()">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                清除此頁
+            </button>
+        </div>
+        
+        <!-- Summary Tab -->
+        <div class="tab-content" id="tab-summary">
+            <div class="form-group">
+                <label for="summaryText">病摘內容 (Medical Summary)</label>
+                <textarea id="summaryText" rows="18" placeholder="輸入病摘內容..."></textarea>
+            </div>
+            <button class="btn btn-outline" onclick="clearField('summaryText')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                清除此頁
+            </button>
+        </div>
+        
+        <!-- Lab Tab -->
+        <div class="tab-content" id="tab-lab">
+            <div class="form-group">
+                <label for="labText">檢驗數據 (Lab Data)</label>
+                <textarea id="labText" rows="18" placeholder="輸入檢驗數據..."></textarea>
+            </div>
+            <button class="btn btn-outline" onclick="clearField('labText')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                清除此頁
+            </button>
+        </div>
+        
+        <!-- Pathology Tab -->
+        <div class="tab-content" id="tab-pathology">
+            <div class="btn-group" style="margin-bottom: 16px;">
+                <button class="btn btn-primary" onclick="startPathologyEdit(null)">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    新增病理報告
+                </button>
+                <button class="btn btn-outline" onclick="clearAllPathology()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    清空列表
+                </button>
+            </div>
+            
+            <div class="editor-panel" id="pathologyEditor">
+                <h4>病理報告編輯</h4>
+                <div class="btn-group" style="margin-bottom: 16px;">
+                    <button class="btn btn-success" onclick="savePathology()">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        儲存
+                    </button>
+                    <button class="btn btn-outline" onclick="cancelPathologyEdit()">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        取消
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label for="pathologyDate">日期</label>
+                    <input type="date" id="pathologyDate" style="max-width: 200px;">
+                </div>
+                <div class="form-group">
+                    <label for="pathologyContent">報告內容</label>
+                    <textarea id="pathologyContent" rows="8" placeholder="輸入病理報告內容..."></textarea>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>內容預覽</th>
+                            <th style="width: 100px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pathologyTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Imaging Tab -->
+        <div class="tab-content" id="tab-imaging">
+            <div class="btn-group" style="margin-bottom: 16px;">
+                <button class="btn btn-primary" onclick="startImagingEdit(null)">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    新增影像報告
+                </button>
+                <button class="btn btn-outline" onclick="clearAllImaging()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    清空列表
+                </button>
+            </div>
+            
+            <div class="editor-panel" id="imagingEditor">
+                <h4>影像報告編輯</h4>
+                <div class="btn-group" style="margin-bottom: 16px;">
+                    <button class="btn btn-success" onclick="saveImaging()">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        儲存
+                    </button>
+                    <button class="btn btn-outline" onclick="cancelImagingEdit()">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        取消
+                    </button>
+                </div>
+                <div class="inline-row">
+                    <div class="form-group">
+                        <label for="imagingType">種類</label>
+                        <select id="imagingType">
+                            <option value="CT">CT</option>
+                            <option value="MRI">MRI</option>
+                            <option value="Bone scan">Bone scan</option>
+                            <option value="PET-CT">PET-CT</option>
+                            <option value="Sono">Sono</option>
+                            <option value="Breast Sono">Breast Sono</option>
+                            <option value="Endoscopy">Endoscopy</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="imagingDate">日期</label>
+                        <input type="date" id="imagingDate">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="imagingContent">報告內容</label>
+                    <textarea id="imagingContent" rows="8" placeholder="輸入影像報告內容..."></textarea>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>種類</th>
+                            <th style="width: 100px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="imagingTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Preview Tab -->
+        <div class="tab-content" id="tab-preview">
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 6px;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                按下「重新產生預覽」按鈕，會依照目前各頁資料產生完整輸出文字。
+            </p>
+            <button class="btn btn-primary" onclick="refreshPreview()" style="margin-bottom: 16px;">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                重新產生預覽
+            </button>
+            <div class="form-group">
+                <label for="previewText">預覽輸出內容</label>
+                <textarea id="previewText" placeholder="預覽內容將顯示在此..."></textarea>
+            </div>
+        </div>
+        
+        <!-- Bottom Bar -->
+        <div class="bottom-bar">
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveData()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    暫存
+                </button>
+                <button class="btn btn-outline" onclick="clearAll()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    清除重置
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-outline" onclick="exportTXT()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    匯出 TXT
+                </button>
+                <button class="btn btn-accent" onclick="exportPDF()">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                    匯出 PDF
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- Hidden PDF Content -->
+    <div id="pdfContent"></div>
+    
+    <script>
+        // ========= 資料結構 =========
+        const FRAILTY_DESC = {
+            "1": "非常健壯", "2": "健康良好", "3": "日常可自理",
+            "4": "脆弱但尚可自理", "5": "輕度衰弱", "6": "中度衰弱",
+            "7": "重度衰弱", "8": "極重度衰弱", "9": "末期病人"
+        };
+        
+        let data = {
+            promptText: "",
+            includePrompt: true,
+            promptTemplates: Array.from({length: 10}, (_, i) => ({name: `範本 ${i+1}`, content: ""})),
+            patientName: "",
+            patientMRN: "",
+            ecog: "",
+            cfs: "",
+            medicalSummary: "",
+            labData: "",
+            pathology: [],
+            imaging: [],
+            previewText: ""
+        };
+        
+        let selectedTemplateIndex = 0;
+        let pathologyEditIndex = null;
+        let imagingEditIndex = null;
+        
+        // ========= SVG Icons =========
+        const icons = {
+            file: '<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+            edit: '<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+            trash: '<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+            check: '<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
+        };
+        
+        // ========= 初始化 =========
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            initTabs();
+            renderTemplateList();
+            renderPathologyTable();
+            renderImagingTable();
+            applyDataToUI();
+        });
+        
+        // ========= Tab 切換 =========
+        function initTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+                });
+            });
+        }
+        
+        // ========= Toast 訊息 =========
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = `${icons.check} ${msg}`;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // ========= 範本管理 =========
+        function renderTemplateList() {
+            const list = document.getElementById('templateList');
+            list.innerHTML = '';
+            data.promptTemplates.forEach((tpl, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'template-btn' + (idx === selectedTemplateIndex ? ' selected' : '');
+                btn.innerHTML = `${icons.file} ${tpl.name}${tpl.content.trim() ? ' *' : ''}`;
+                btn.onclick = () => selectTemplate(idx);
+                list.appendChild(btn);
+            });
+        }
+        
+        function selectTemplate(idx) {
+            updateDataFromUI();
+            selectedTemplateIndex = idx;
+            const tpl = data.promptTemplates[idx];
+            document.getElementById('promptText').value = tpl.content;
+            document.getElementById('templateName').value = tpl.name;
+            renderTemplateList();
+            showToast(`已載入 範本 ${idx+1}：${tpl.name}`);
+        }
+        
+        function saveTemplateContent() {
+            updateDataFromUI();
+            const name = document.getElementById('templateName').value.trim() || `範本 ${selectedTemplateIndex+1}`;
+            data.promptTemplates[selectedTemplateIndex] = {
+                name: name,
+                content: data.promptText
+            };
+            renderTemplateList();
+            saveData();
+            showToast(`已儲存至 範本 ${selectedTemplateIndex+1}`);
+        }
+        
+        function renameTemplate() {
+            const name = document.getElementById('templateName').value.trim();
+            if (!name) {
+                showToast('請輸入範本名稱', true);
+                return;
+            }
+            data.promptTemplates[selectedTemplateIndex].name = name;
+            renderTemplateList();
+            saveData();
+            showToast(`已重新命名為「${name}」`);
+        }
+        
+        // ========= 病理報告管理 =========
+        function renderPathologyTable() {
+            const tbody = document.getElementById('pathologyTableBody');
+            const sorted = [...data.pathology].sort((a, b) => a.date.localeCompare(b.date));
+            data.pathology = sorted;
+            
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px;">尚無病理報告</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = sorted.map((p, idx) => `
+                <tr>
+                    <td>${p.date}</td>
+                    <td>${p.text.replace(/\n/g, ' ').substring(0, 50)}${p.text.length > 50 ? '...' : ''}</td>
+                    <td class="action-btns">
+                        <button class="icon-btn" onclick="startPathologyEdit(${idx})" title="編輯">${icons.edit}</button>
+                        <button class="icon-btn danger" onclick="deletePathology(${idx})" title="刪除">${icons.trash}</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function startPathologyEdit(idx) {
+            pathologyEditIndex = idx;
+            const editor = document.getElementById('pathologyEditor');
+            editor.classList.add('active');
+            
+            if (idx !== null && data.pathology[idx]) {
+                document.getElementById('pathologyDate').value = data.pathology[idx].date;
+                document.getElementById('pathologyContent').value = data.pathology[idx].text;
+            } else {
+                document.getElementById('pathologyDate').value = '';
+                document.getElementById('pathologyContent').value = '';
+            }
+        }
+        
+        function savePathology() {
+            const date = document.getElementById('pathologyDate').value;
+            const text = document.getElementById('pathologyContent').value.trim();
+            
+            if (!date || !text) {
+                showToast('日期與內容皆為必填', true);
+                return;
+            }
+            
+            const entry = { date, text };
+            if (pathologyEditIndex === null) {
+                data.pathology.push(entry);
+            } else {
+                data.pathology[pathologyEditIndex] = entry;
+            }
+            
+            cancelPathologyEdit();
+            renderPathologyTable();
+            saveData();
+            showToast('病理報告已儲存');
+        }
+        
+        function cancelPathologyEdit() {
+            document.getElementById('pathologyEditor').classList.remove('active');
+            pathologyEditIndex = null;
+        }
+        
+        function deletePathology(idx) {
+            if (confirm('確定要刪除此病理報告？')) {
+                data.pathology.splice(idx, 1);
+                renderPathologyTable();
+                saveData();
+                showToast('已刪除病理報告');
+            }
+        }
+        
+        function clearAllPathology() {
+            if (data.pathology.length === 0) return;
+            if (confirm('確定要清空所有病理報告？')) {
+                data.pathology = [];
+                renderPathologyTable();
+                saveData();
+                showToast('已清空所有病理報告');
+            }
+        }
+        
+        // ========= 影像報告管理 =========
+        function renderImagingTable() {
+            const tbody = document.getElementById('imagingTableBody');
+            const sorted = [...data.imaging].sort((a, b) => a.date.localeCompare(b.date));
+            data.imaging = sorted;
+            
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px;">尚無影像報告</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = sorted.map((p, idx) => `
+                <tr>
+                    <td>${p.date}</td>
+                    <td>${p.type}</td>
+                    <td class="action-btns">
+                        <button class="icon-btn" onclick="startImagingEdit(${idx})" title="編輯">${icons.edit}</button>
+                        <button class="icon-btn danger" onclick="deleteImaging(${idx})" title="刪除">${icons.trash}</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function startImagingEdit(idx) {
+            imagingEditIndex = idx;
+            const editor = document.getElementById('imagingEditor');
+            editor.classList.add('active');
+            
+            if (idx !== null && data.imaging[idx]) {
+                document.getElementById('imagingType').value = data.imaging[idx].type;
+                document.getElementById('imagingDate').value = data.imaging[idx].date;
+                document.getElementById('imagingContent').value = data.imaging[idx].text;
+            } else {
+                document.getElementById('imagingType').value = 'CT';
+                document.getElementById('imagingDate').value = '';
+                document.getElementById('imagingContent').value = '';
+            }
+        }
+        
+        function saveImaging() {
+            const type = document.getElementById('imagingType').value;
+            const date = document.getElementById('imagingDate').value;
+            const text = document.getElementById('imagingContent').value.trim();
+            
+            if (!type || !date || !text) {
+                showToast('所有欄位皆為必填', true);
+                return;
+            }
+            
+            const entry = { type, date, text };
+            if (imagingEditIndex === null) {
+                data.imaging.push(entry);
+            } else {
+                data.imaging[imagingEditIndex] = entry;
+            }
+            
+            cancelImagingEdit();
+            renderImagingTable();
+            saveData();
+            showToast('影像報告已儲存');
+        }
+        
+        function cancelImagingEdit() {
+            document.getElementById('imagingEditor').classList.remove('active');
+            imagingEditIndex = null;
+        }
+        
+        function deleteImaging(idx) {
+            if (confirm('確定要刪除此影像報告？')) {
+                data.imaging.splice(idx, 1);
+                renderImagingTable();
+                saveData();
+                showToast('已刪除影像報告');
+            }
+        }
+        
+        function clearAllImaging() {
+            if (data.imaging.length === 0) return;
+            if (confirm('確定要清空所有影像報告？')) {
+                data.imaging = [];
+                renderImagingTable();
+                saveData();
+                showToast('已清空所有影像報告');
+            }
+        }
+        
+        // ========= 預覽功能 =========
+        function generatePreview() {
+            updateDataFromUI();
+            let parts = [];
+            
+            if (data.includePrompt && data.promptText.trim()) {
+                parts.push(data.promptText);
+                parts.push('\n' + '─'.repeat(30) + '\n');
+            }
+            
+            const hasPatient = data.patientName || data.patientMRN || data.ecog || data.cfs;
+            if (hasPatient) {
+                parts.push('【病人資料】');
+                parts.push(`姓名：${data.patientName}`);
+                parts.push(`病歷號：${data.patientMRN}`);
+                if (data.ecog) parts.push(`ECOG: ${data.ecog}`);
+                if (data.cfs) {
+                    const desc = FRAILTY_DESC[data.cfs] || '';
+                    parts.push(`衰弱量表: ${data.cfs}${desc ? `（${desc}）` : ''}`);
+                }
+                parts.push('─'.repeat(30));
+            }
+            
+            if (data.medicalSummary.trim()) {
+                parts.push('\n【病摘】');
+                parts.push(data.medicalSummary);
+                parts.push('─'.repeat(30));
+            }
+            
+            if (data.labData.trim()) {
+                parts.push('\n【檢驗資料】');
+                parts.push(data.labData);
+                parts.push('─'.repeat(30));
+            }
+            
+            if (data.pathology.length > 0) {
+                parts.push('\n【病理報告】');
+                data.pathology.forEach(p => {
+                    parts.push(`Date: ${p.date}`);
+                    parts.push('Content:');
+                    parts.push(p.text);
+                    parts.push('');
+                });
+                parts.push('─'.repeat(15));
+            }
+            
+            if (data.imaging.length > 0) {
+                parts.push('\n【影像報告】');
+                data.imaging.forEach(p => {
+                    parts.push(`Date: ${p.date}`);
+                    parts.push(`Type: ${p.type}`);
+                    parts.push('Content:');
+                    parts.push(p.text);
+                    parts.push('');
+                });
+                parts.push('─'.repeat(15));
+            }
+            
+            return parts.join('\n').trim();
+        }
+        
+        function refreshPreview() {
+            const preview = generatePreview();
+            data.previewText = preview;
+            document.getElementById('previewText').value = preview;
+            saveData();
+            showToast('已重新產生預覽內容');
+        }
+        
+        // ========= 資料同步 =========
+        function updateDataFromUI() {
+            data.promptText = document.getElementById('promptText').value;
+            data.includePrompt = document.getElementById('includePrompt').checked;
+            data.patientName = document.getElementById('patientName').value;
+            data.patientMRN = document.getElementById('patientMRN').value;
+            data.ecog = document.getElementById('ecog').value;
+            data.cfs = document.getElementById('cfs').value;
+            data.medicalSummary = document.getElementById('summaryText').value;
+            data.labData = document.getElementById('labText').value;
+            data.previewText = document.getElementById('previewText').value;
+        }
+        
+        function applyDataToUI() {
+            document.getElementById('promptText').value = data.promptText;
+            document.getElementById('includePrompt').checked = data.includePrompt;
+            document.getElementById('patientName').value = data.patientName;
+            document.getElementById('patientMRN').value = data.patientMRN;
+            document.getElementById('ecog').value = data.ecog;
+            document.getElementById('cfs').value = data.cfs;
+            document.getElementById('summaryText').value = data.medicalSummary;
+            document.getElementById('labText').value = data.labData;
+            document.getElementById('previewText').value = data.previewText;
+        }
+        
+        function saveData() {
+            updateDataFromUI();
+            localStorage.setItem('medicalRecordOrganizer_v63', JSON.stringify(data));
+        }
+        
+        function loadData() {
+            const saved = localStorage.getItem('medicalRecordOrganizer_v63');
+            if (saved) {
+                try {
+                    const loaded = JSON.parse(saved);
+                    data = { ...data, ...loaded };
+                } catch (e) {
+                    console.error('載入資料失敗:', e);
+                }
+            }
+        }
+        
+        // ========= 清除功能 =========
+        function clearField(fieldId) {
+            document.getElementById(fieldId).value = '';
+            saveData();
+            showToast('已清除');
+        }
+        
+        function clearPatientTab() {
+            document.getElementById('patientName').value = '';
+            document.getElementById('patientMRN').value = '';
+            document.getElementById('ecog').value = '';
+            document.getElementById('cfs').value = '';
+            document.getElementById('maskInfo').checked = false;
+            saveData();
+            showToast('已清除病人資料');
+        }
+        
+        function clearAll() {
+            if (!confirm('確定要清除所有資料嗎？（範本會保留）')) return;
+            
+            const savedTemplates = data.promptTemplates;
+            data = {
+                promptText: "",
+                includePrompt: true,
+                promptTemplates: savedTemplates,
+                patientName: "",
+                patientMRN: "",
+                ecog: "",
+                cfs: "",
+                medicalSummary: "",
+                labData: "",
+                pathology: [],
+                imaging: [],
+                previewText: ""
+            };
+            
+            applyDataToUI();
+            renderPathologyTable();
+            renderImagingTable();
+            saveData();
+            showToast('已完成清除重置');
+        }
+        
+        // ========= 匯出功能 =========
+        function getMaskedInfo() {
+            let name = data.patientName;
+            let mrn = data.patientMRN;
+            
+            if (name.length > 2) {
+                name = name[0] + '○'.repeat(name.length - 2) + name[name.length - 1];
+            } else if (name.length === 2) {
+                name = name[0] + '○';
+            }
+            
+            if (mrn.length > 4) {
+                const mid = Math.floor(mrn.length / 2);
+                mrn = mrn.substring(0, mid - 1) + '**' + mrn.substring(mid + 1);
+            } else if (mrn.length > 0) {
+                mrn = mrn[0] + '**';
+            }
+            
+            return { name, mrn };
+        }
+        
+        function sanitizeFilename(text) {
+            return text.replace(/[<>:"/\\|?*]/g, '').trim();
+        }
+        
+        function getExportContent() {
+            updateDataFromUI();
+            let content = data.previewText || generatePreview();
+            
+            const mask = document.getElementById('maskInfo').checked;
+            const hasPatient = data.patientName || data.patientMRN;
+            
+            if (mask && hasPatient) {
+                const masked = getMaskedInfo();
+                if (data.patientName) content = content.replaceAll(data.patientName, masked.name);
+                if (data.patientMRN) content = content.replaceAll(data.patientMRN, masked.mrn);
+            }
+            
+            return content;
+        }
+        
+        function getFilename(ext) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const h = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const dateStr = `${y}${m}${d}-${h}${min}`;
+            
+            let parts = ['病歷整理'];
+            if (data.patientName) {
+                const safeName = sanitizeFilename(data.patientName);
+                if (safeName) parts.push(safeName);
+            }
+            if (data.patientMRN) {
+                const safeMrn = sanitizeFilename(data.patientMRN);
+                if (safeMrn) parts.push(safeMrn);
+            }
+            parts.push(dateStr);
+            
+            return parts.join('_') + '.' + ext;
+        }
+        
+        function exportTXT() {
+            const content = getExportContent();
+            if (!content.trim()) {
+                showToast('預覽輸出為空白', true);
+                return;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = getFilename('txt');
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('已匯出 TXT 檔案');
+        }
+        
+        async function exportPDF() {
+            const content = getExportContent();
+            if (!content.trim()) {
+                showToast('預覽輸出為空白', true);
+                return;
+            }
+            
+            showToast('正在產生 PDF...');
+            
+            // 準備 PDF 內容
+            const pdfDiv = document.getElementById('pdfContent');
+            pdfDiv.innerHTML = `
+                <div style="font-family: 'Noto Sans TC', sans-serif; font-size: 12px; line-height: 1.8; color: #1E293B;">
+                    <div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #E2E8F0;">
+                        <h1 style="font-size: 18px; margin: 0 0 5px 0; color: #1E293B;">病歷整理報告</h1>
+                        <p style="font-size: 11px; color: #64748B; margin: 0;">Generated by SELA Medical Record Organizer V6.3</p>
+                    </div>
+                    <pre style="white-space: pre-wrap; word-wrap: break-word; font-family: 'Noto Sans TC', sans-serif; font-size: 11px; margin: 0;">${content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                </div>
+            `;
+            
+            try {
+                const canvas = await html2canvas(pdfDiv, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const { jsPDF } = window.jspdf;
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const ratio = Math.min((pdfWidth - 20) / imgWidth, (pdfHeight - 20) / imgHeight);
+                const imgX = 10;
+                const imgY = 10;
+                const finalWidth = imgWidth * ratio;
+                const finalHeight = imgHeight * ratio;
+                
+                // 如果內容超過一頁，需要分頁
+                const pageHeight = pdfHeight - 20;
+                let heightLeft = finalHeight;
+                let position = imgY;
+                
+                pdf.addImage(imgData, 'PNG', imgX, position, finalWidth, finalHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft > 0) {
+                    position = heightLeft - finalHeight + imgY;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', imgX, position, finalWidth, finalHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                pdf.save(getFilename('pdf'));
+                showToast('已匯出 PDF 檔案');
+            } catch (error) {
+                console.error('PDF 匯出失敗:', error);
+                showToast('PDF 匯出失敗', true);
+            }
+            
+            pdfDiv.innerHTML = '';
+        }
+        
+        // 自動儲存
+        setInterval(saveData, 30000);
+        
+        // 離開前儲存
+        window.addEventListener('beforeunload', saveData);
+    </script>
+</body>
+</html>
