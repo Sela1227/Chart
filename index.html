@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.5 Web</title>
+    <title>病歷整理器 V6.6.0</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,6 +26,7 @@
             --border-focus: #64748B;
             --danger: #DC2626;
             --success: #16A34A;
+            --warning: #F59E0B;
             --shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,12 +47,14 @@
         .tab-content.active { display: block; }
         .form-group { margin-bottom: 10px; }
         .form-group label { display: block; margin-bottom: 2px; font-weight: 500; font-size: 0.7rem; color: var(--text-muted); }
-        input[type="text"], select, textarea { width: 100%; padding: 6px 9px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.8rem; font-family: inherit; transition: all 0.2s; background: var(--bg-input); color: var(--text-primary); }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 6px 9px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.8rem; font-family: inherit; transition: all 0.2s; background: var(--bg-input); color: var(--text-primary); }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--text-secondary); box-shadow: 0 0 0 2px rgba(71,85,105,0.12); }
+        input.error, .date-input.error { border-color: var(--danger) !important; background: #FEF2F2 !important; }
         textarea { resize: vertical; min-height: 140px; line-height: 1.5; }
         textarea[readonly] { background: var(--bg-card); color: var(--text-muted); cursor: not-allowed; }
         .date-input { width: 105px !important; font-family: Consolas, monospace; letter-spacing: 0.5px; text-align: center; }
         .date-input::placeholder { font-size: 0.65rem; letter-spacing: 0; }
+        .age-input { width: 70px !important; text-align: center; }
         .btn { padding: 5px 10px; border: 1px solid transparent; border-radius: 5px; cursor: pointer; font-size: 0.7rem; font-family: inherit; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; }
         .btn-primary { background: var(--text-primary); color: var(--bg-card); }
         .btn-primary:hover { background: #334155; }
@@ -95,6 +98,7 @@
         .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-primary); color: var(--bg-card); padding: 7px 14px; border-radius: 5px; z-index: 1000; opacity: 0; transition: all 0.3s; font-size: 0.7rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: 5px; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); }
         .helper-text { font-size: 0.65rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
         .inline-row { display: flex; gap: 10px; flex-wrap: wrap; }
         .inline-row .form-group { flex: 1; min-width: 140px; }
@@ -106,6 +110,8 @@
         #pdfContent { position: absolute; left: -9999px; top: 0; width: 800px; padding: 40px; background: white; font-family: 'Noto Sans TC', sans-serif; }
         .edit-mode-hint { font-size: 0.65rem; color: var(--primary); margin-bottom: 6px; display: none; }
         .edit-mode-hint.show { display: flex; align-items: center; gap: 4px; }
+        .date-error-msg { font-size: 0.6rem; color: var(--danger); margin-top: 2px; display: none; }
+        .date-error-msg.show { display: block; }
     </style>
 </head>
 <body>
@@ -114,7 +120,7 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.5</h1>
+                    <h1>病歷整理器 V6.6.0</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -164,9 +170,12 @@
         </div>
         
         <div class="tab-content" id="tab-patient">
-            <div class="helper-text"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>姓名/病歷號會自動加入檔名</div>
-            <div class="form-group"><label>姓名</label><input type="text" id="patientName" placeholder="病人姓名" style="max-width:340px;"></div>
-            <div class="form-group"><label>病歷號</label><input type="text" id="patientMRN" placeholder="病歷號" style="max-width:340px;"></div>
+            <div class="helper-text"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>姓名/病歷號會自動加入檔名，年齡選填</div>
+            <div class="inline-row">
+                <div class="form-group" style="flex:2;"><label>姓名</label><input type="text" id="patientName" placeholder="病人姓名" style="max-width:280px;"></div>
+                <div class="form-group" style="flex:0 0 auto;min-width:80px;"><label>年齡</label><input type="number" id="patientAge" class="age-input" placeholder="歲" min="0" max="150"></div>
+            </div>
+            <div class="form-group"><label>病歷號</label><input type="text" id="patientMRN" placeholder="病歷號" style="max-width:280px;"></div>
             <div class="inline-row">
                 <div class="form-group"><label>ECOG</label><select id="ecog" style="max-width:160px;"><option value="">不填</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
                 <div class="form-group"><label>衰弱量表</label><select id="cfs" style="max-width:220px;"><option value="">不填</option><option value="1">1：非常健壯</option><option value="2">2：健康良好</option><option value="3">3：日常可自理</option><option value="4">4：脆弱但尚可自理</option><option value="5">5：輕度衰弱</option><option value="6">6：中度衰弱</option><option value="7">7：重度衰弱</option><option value="8">8：極重度衰弱</option><option value="9">9：末期病人</option></select></div>
@@ -195,7 +204,7 @@
                     <h4>病理報告</h4>
                     <div class="editor-row">
                         <label>日期</label>
-                        <input type="text" id="pathologyDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)">
+                        <input type="text" id="pathologyDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)" onblur="validateDateInput(this)">
                         <div class="category-group">
                             <label><input type="checkbox" id="pathCatBiopsy" checked> Biopsy</label>
                             <label><input type="checkbox" id="pathCatPathology"> Pathology</label>
@@ -204,6 +213,7 @@
                         <button class="btn btn-outline" onclick="cancelPathologyEdit()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
                     </div>
                 </div>
+                <div class="date-error-msg" id="pathologyDateError">日期格式錯誤，請輸入正確日期</div>
                 <textarea id="pathologyContent" rows="4" placeholder="報告內容..." style="margin-top:6px;"></textarea>
             </div>
             <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:90px;">分類</th><th>內容預覽</th><th style="width:60px;">操作</th></tr></thead><tbody id="pathologyTableBody"></tbody></table></div>
@@ -221,11 +231,12 @@
                         <label>種類</label>
                         <select id="imagingType" style="width:95px;"><option>CT</option><option>MRI</option><option>Bone scan</option><option>PET-CT</option><option>Sono</option><option>Breast Sono</option><option>Endoscopy</option><option>Other</option></select>
                         <label>日期</label>
-                        <input type="text" id="imagingDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)">
+                        <input type="text" id="imagingDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)" onblur="validateDateInput(this)">
                         <button class="btn btn-success" onclick="saveImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
                         <button class="btn btn-outline" onclick="cancelImagingEdit()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
                     </div>
                 </div>
+                <div class="date-error-msg" id="imagingDateError">日期格式錯誤，請輸入正確日期</div>
                 <textarea id="imagingContent" rows="4" placeholder="報告內容..." style="margin-top:6px;"></textarea>
             </div>
             <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:85px;">種類</th><th style="width:60px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
@@ -256,59 +267,81 @@
     
     <script>
         const FRAILTY_DESC={"1":"非常健壯","2":"健康良好","3":"日常可自理","4":"脆弱但尚可自理","5":"輕度衰弱","6":"中度衰弱","7":"重度衰弱","8":"極重度衰弱","9":"末期病人"};
-        let data={promptText:"",includePrompt:true,promptTemplates:Array.from({length:10},(_,i)=>({name:`範本${i+1}`,content:""})),patientName:"",patientMRN:"",ecog:"",cfs:"",medicalSummary:"",labData:"",pathology:[],imaging:[],previewText:""};
+        let data={promptText:"",includePrompt:true,promptTemplates:Array.from({length:10},(_,i)=>({name:`範本${i+1}`,content:""})),patientName:"",patientAge:"",patientMRN:"",ecog:"",cfs:"",medicalSummary:"",labData:"",pathology:[],imaging:[],previewText:""};
         let selectedTemplateIndex=0,pathologyEditIndex=null,imagingEditIndex=null,isEditMode=false,originalContent="";
-        const icons={file:'<svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',edit:'<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',trash:'<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',check:'<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'};
+        const icons={file:'<svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',edit:'<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',trash:'<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',check:'<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',warn:'<svg class="icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'};
         
         function formatDateInput(el){
             let v=el.value.replace(/\D/g,'');
-            if(v.length>=8){v=v.substring(0,8);el.value=`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;}
+            if(v.length>=8){v=v.substring(0,8);el.value=`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;validateDateInput(el);}
         }
         function normalizeDate(s){s=(s||'').trim().replace(/\D/g,'');return s.length===8?`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`:s;}
-        function isValidDate(s){const n=normalizeDate(s);if(!/^\d{4}-\d{2}-\d{2}$/.test(n))return false;const[y,m,d]=n.split('-').map(Number),dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
+        function isValidDate(s){
+            const n=normalizeDate(s);
+            if(!/^\d{4}-\d{2}-\d{2}$/.test(n))return false;
+            const[y,m,d]=n.split('-').map(Number);
+            if(m<1||m>12||d<1||d>31)return false;
+            const dt=new Date(y,m-1,d);
+            return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;
+        }
+        function validateDateInput(el){
+            const v=el.value.trim();
+            const errId=el.id+'Error';
+            const errEl=document.getElementById(errId);
+            if(!v){el.classList.remove('error');if(errEl)errEl.classList.remove('show');return true;}
+            if(!isValidDate(v)){
+                el.classList.add('error');
+                if(errEl)errEl.classList.add('show');
+                showToast('日期格式錯誤','warning');
+                return false;
+            }
+            el.classList.remove('error');
+            if(errEl)errEl.classList.remove('show');
+            return true;
+        }
         
         document.addEventListener('DOMContentLoaded',()=>{loadData();initTabs();renderTemplateList();renderPathologyTable();renderImagingTable();applyDataToUI();});
         function initTabs(){document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(`tab-${b.dataset.tab}`).classList.add('active');}));}
-        function showToast(msg,err=false){const t=document.getElementById('toast');t.innerHTML=`${icons.check} ${msg}`;t.className='toast show'+(err?' error':'');setTimeout(()=>t.classList.remove('show'),2000);}
+        function showToast(msg,type='success'){const t=document.getElementById('toast');t.innerHTML=`${type==='warning'?icons.warn:icons.check} ${msg}`;t.className='toast show'+(type==='error'?' error':type==='warning'?' warning':'');setTimeout(()=>t.classList.remove('show'),2000);}
         
         function renderTemplateList(){const l=document.getElementById('templateList');l.innerHTML='';data.promptTemplates.forEach((t,i)=>{const b=document.createElement('button');b.className='template-btn'+(i===selectedTemplateIndex?' selected':'');b.innerHTML=`${icons.file} ${t.name}${t.content.trim()?'*':''}`;b.onclick=()=>selectTemplate(i);l.appendChild(b);});}
         function selectTemplate(i){if(isEditMode){if(!confirm('放棄修改？'))return;cancelEditMode();}selectedTemplateIndex=i;const t=data.promptTemplates[i];document.getElementById('promptText').value=t.content;document.getElementById('templateName').value=t.name;renderTemplateList();}
         function enableEditMode(){isEditMode=true;originalContent=document.getElementById('promptText').value;document.getElementById('promptText').removeAttribute('readonly');document.getElementById('btnEditTemplate').style.display='none';document.getElementById('btnSaveTemplate').style.display='';document.getElementById('btnCancelEdit').style.display='';document.getElementById('editModeHint').classList.add('show');document.getElementById('promptText').focus();}
         function cancelEditMode(){isEditMode=false;document.getElementById('promptText').value=originalContent;document.getElementById('promptText').setAttribute('readonly','');document.getElementById('btnEditTemplate').style.display='';document.getElementById('btnSaveTemplate').style.display='none';document.getElementById('btnCancelEdit').style.display='none';document.getElementById('editModeHint').classList.remove('show');}
         function saveTemplateContent(){const n=document.getElementById('templateName').value.trim()||`範本${selectedTemplateIndex+1}`;data.promptTemplates[selectedTemplateIndex]={name:n,content:document.getElementById('promptText').value};isEditMode=false;document.getElementById('promptText').setAttribute('readonly','');document.getElementById('btnEditTemplate').style.display='';document.getElementById('btnSaveTemplate').style.display='none';document.getElementById('btnCancelEdit').style.display='none';document.getElementById('editModeHint').classList.remove('show');renderTemplateList();saveData();showToast('已儲存');}
-        function renameTemplate(){const n=document.getElementById('templateName').value.trim();if(!n)return showToast('請輸入名稱',true);data.promptTemplates[selectedTemplateIndex].name=n;renderTemplateList();saveData();showToast('已命名');}
+        function renameTemplate(){const n=document.getElementById('templateName').value.trim();if(!n)return showToast('請輸入名稱','error');data.promptTemplates[selectedTemplateIndex].name=n;renderTemplateList();saveData();showToast('已命名');}
         
         function renderPathologyTable(){const tb=document.getElementById('pathologyTableBody');data.pathology.sort((a,b)=>a.date.localeCompare(b.date));if(!data.pathology.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.pathology.map((p,i)=>`<tr><td>${p.date}</td><td>${p.category||'Biopsy'}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startPathologyEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deletePathology(${i})">${icons.trash}</button></td></tr>`).join('');}
-        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;}document.getElementById('pathologyDate').focus();}
-        function savePathology(){const d=document.getElementById('pathologyDate').value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked;if(!d||!t)return showToast('日期與內容必填',true);if(!catB&&!catP)return showToast('請選擇分類',true);const nd=normalizeDate(d);if(!isValidDate(nd))return showToast('日期格式錯誤',true);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();showToast('已儲存');}
+        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');document.getElementById('pathologyDateError').classList.remove('show');document.getElementById('pathologyDate').classList.remove('error');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;}document.getElementById('pathologyDate').focus();}
+        function savePathology(){const dateEl=document.getElementById('pathologyDate');const d=dateEl.value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked;if(!d||!t)return showToast('日期與內容必填','error');if(!catB&&!catP)return showToast('請選擇分類','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();showToast('已儲存');}
         function cancelPathologyEdit(){document.getElementById('pathologyEditor').classList.remove('active');pathologyEditIndex=null;}
         function deletePathology(i){if(confirm('確定刪除？')){data.pathology.splice(i,1);renderPathologyTable();saveData();showToast('已刪除');}}
         function clearAllPathology(){if(!data.pathology.length)return;if(confirm('確定清空？')){data.pathology=[];renderPathologyTable();saveData();showToast('已清空');}}
         
         function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
-        function startImagingEdit(i){imagingEditIndex=i;document.getElementById('imagingEditor').classList.add('active');if(i!==null&&data.imaging[i]){document.getElementById('imagingType').value=data.imaging[i].type;document.getElementById('imagingDate').value=data.imaging[i].date;document.getElementById('imagingContent').value=data.imaging[i].text;}else{document.getElementById('imagingType').value='CT';document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';}document.getElementById('imagingDate').focus();}
-        function saveImaging(){const tp=document.getElementById('imagingType').value,d=document.getElementById('imagingDate').value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t)return showToast('所有欄位必填',true);const nd=normalizeDate(d);if(!isValidDate(nd))return showToast('日期格式錯誤',true);const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;cancelImagingEdit();renderImagingTable();saveData();showToast('已儲存');}
+        function startImagingEdit(i){imagingEditIndex=i;document.getElementById('imagingEditor').classList.add('active');document.getElementById('imagingDateError').classList.remove('show');document.getElementById('imagingDate').classList.remove('error');if(i!==null&&data.imaging[i]){document.getElementById('imagingType').value=data.imaging[i].type;document.getElementById('imagingDate').value=data.imaging[i].date;document.getElementById('imagingContent').value=data.imaging[i].text;}else{document.getElementById('imagingType').value='CT';document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';}document.getElementById('imagingDate').focus();}
+        function saveImaging(){const dateEl=document.getElementById('imagingDate');const tp=document.getElementById('imagingType').value,d=dateEl.value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t)return showToast('所有欄位必填','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;cancelImagingEdit();renderImagingTable();saveData();showToast('已儲存');}
         function cancelImagingEdit(){document.getElementById('imagingEditor').classList.remove('active');imagingEditIndex=null;}
         function deleteImaging(i){if(confirm('確定刪除？')){data.imaging.splice(i,1);renderImagingTable();saveData();showToast('已刪除');}}
         function clearAllImaging(){if(!data.imaging.length)return;if(confirm('確定清空？')){data.imaging=[];renderImagingTable();saveData();showToast('已清空');}}
         
-        function generatePreview(){updateDataFromUI();let p=[];if(data.includePrompt&&data.promptText.trim()){p.push(data.promptText);p.push('\n'+'─'.repeat(30)+'\n');}const hp=data.patientName||data.patientMRN||data.ecog||data.cfs;if(hp){p.push('【病人資料】');p.push(`姓名：${data.patientName}`);p.push(`病歷號：${data.patientMRN}`);if(data.ecog)p.push(`ECOG: ${data.ecog}`);if(data.cfs)p.push(`衰弱量表: ${data.cfs}${FRAILTY_DESC[data.cfs]?`（${FRAILTY_DESC[data.cfs]}）`:''}`);p.push('─'.repeat(30));}if(data.medicalSummary.trim()){p.push('\n【病摘】');p.push(data.medicalSummary);p.push('─'.repeat(30));}if(data.labData.trim()){p.push('\n【檢驗資料】');p.push(data.labData);p.push('─'.repeat(30));}if(data.pathology.length){p.push('\n【病理報告】');data.pathology.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Category: ${x.category||'Biopsy'}`);p.push('Content:');p.push(x.text);p.push('');});p.push('─'.repeat(15));}if(data.imaging.length){p.push('\n【影像報告】');data.imaging.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Type: ${x.type}`);p.push('Content:');p.push(x.text);p.push('');});p.push('─'.repeat(15));}return p.join('\n').trim();}
+        function generatePreview(){updateDataFromUI();let p=[];if(data.includePrompt&&data.promptText.trim()){p.push(data.promptText);p.push('\n'+'─'.repeat(30)+'\n');}const hp=data.patientName||data.patientAge||data.patientMRN||data.ecog||data.cfs;if(hp){p.push('【病人資料】');if(data.patientName)p.push(`姓名：${data.patientName}`);if(data.patientAge)p.push(`年齡：${data.patientAge} 歲`);if(data.patientMRN)p.push(`病歷號：${data.patientMRN}`);if(data.ecog)p.push(`ECOG: ${data.ecog}`);if(data.cfs)p.push(`衰弱量表: ${data.cfs}${FRAILTY_DESC[data.cfs]?`（${FRAILTY_DESC[data.cfs]}）`:''}`);p.push('─'.repeat(30));}if(data.medicalSummary.trim()){p.push('\n【病摘】');p.push(data.medicalSummary);p.push('─'.repeat(30));}if(data.labData.trim()){p.push('\n【檢驗資料】');p.push(data.labData);p.push('─'.repeat(30));}if(data.pathology.length){p.push('\n【病理報告】');data.pathology.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Category: ${x.category||'Biopsy'}`);p.push('Content:');p.push(x.text);p.push('');});p.push('─'.repeat(15));}if(data.imaging.length){p.push('\n【影像報告】');data.imaging.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Type: ${x.type}`);p.push('Content:');p.push(x.text);p.push('');});p.push('─'.repeat(15));}return p.join('\n').trim();}
         function refreshPreview(){const pv=generatePreview();data.previewText=pv;document.getElementById('previewText').value=pv;saveData();showToast('已產生');}
         
-        function updateDataFromUI(){data.promptText=document.getElementById('promptText').value;data.includePrompt=document.getElementById('includePrompt').checked;data.patientName=document.getElementById('patientName').value;data.patientMRN=document.getElementById('patientMRN').value;data.ecog=document.getElementById('ecog').value;data.cfs=document.getElementById('cfs').value;data.medicalSummary=document.getElementById('summaryText').value;data.labData=document.getElementById('labText').value;data.previewText=document.getElementById('previewText').value;}
-        function applyDataToUI(){document.getElementById('promptText').value=data.promptTemplates[selectedTemplateIndex]?.content||'';document.getElementById('templateName').value=data.promptTemplates[selectedTemplateIndex]?.name||'';document.getElementById('includePrompt').checked=data.includePrompt;document.getElementById('patientName').value=data.patientName;document.getElementById('patientMRN').value=data.patientMRN;document.getElementById('ecog').value=data.ecog;document.getElementById('cfs').value=data.cfs;document.getElementById('summaryText').value=data.medicalSummary;document.getElementById('labText').value=data.labData;document.getElementById('previewText').value=data.previewText;}
-        function saveData(){updateDataFromUI();localStorage.setItem('chart_v65',JSON.stringify(data));}
-        function loadData(){const s=localStorage.getItem('chart_v65');if(s)try{data={...data,...JSON.parse(s)};}catch(e){}}
+        function updateDataFromUI(){data.promptText=document.getElementById('promptText').value;data.includePrompt=document.getElementById('includePrompt').checked;data.patientName=document.getElementById('patientName').value;data.patientAge=document.getElementById('patientAge').value;data.patientMRN=document.getElementById('patientMRN').value;data.ecog=document.getElementById('ecog').value;data.cfs=document.getElementById('cfs').value;data.medicalSummary=document.getElementById('summaryText').value;data.labData=document.getElementById('labText').value;data.previewText=document.getElementById('previewText').value;}
+        function applyDataToUI(){document.getElementById('promptText').value=data.promptTemplates[selectedTemplateIndex]?.content||'';document.getElementById('templateName').value=data.promptTemplates[selectedTemplateIndex]?.name||'';document.getElementById('includePrompt').checked=data.includePrompt;document.getElementById('patientName').value=data.patientName;document.getElementById('patientAge').value=data.patientAge||'';document.getElementById('patientMRN').value=data.patientMRN;document.getElementById('ecog').value=data.ecog;document.getElementById('cfs').value=data.cfs;document.getElementById('summaryText').value=data.medicalSummary;document.getElementById('labText').value=data.labData;document.getElementById('previewText').value=data.previewText;}
+        function saveData(){updateDataFromUI();localStorage.setItem('chart_v660',JSON.stringify(data));}
+        function loadData(){const s=localStorage.getItem('chart_v660');if(s)try{data={...data,...JSON.parse(s)};}catch(e){}}
         function clearField(id){document.getElementById(id).value='';saveData();showToast('已清除');}
-        function clearPatientTab(){['patientName','patientMRN'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');document.getElementById('maskInfo').checked=false;saveData();showToast('已清除');}
-        function clearAll(){if(!confirm('清除所有資料？（保留範本）'))return;const t=data.promptTemplates;data={promptText:'',includePrompt:true,promptTemplates:t,patientName:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',pathology:[],imaging:[],previewText:''};applyDataToUI();renderPathologyTable();renderImagingTable();saveData();showToast('已清除');}
+        function clearPatientTab(){['patientName','patientMRN','patientAge'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');document.getElementById('maskInfo').checked=false;saveData();showToast('已清除');}
+        function clearAll(){if(!confirm('清除所有資料？（保留範本）'))return;const t=data.promptTemplates;data={promptText:'',includePrompt:true,promptTemplates:t,patientName:'',patientAge:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',pathology:[],imaging:[],previewText:''};applyDataToUI();renderPathologyTable();renderImagingTable();saveData();showToast('已清除');}
         
         function getMaskedInfo(){let n=data.patientName,m=data.patientMRN;if(n.length>2)n=n[0]+'○'.repeat(n.length-2)+n[n.length-1];else if(n.length===2)n=n[0]+'○';if(m.length>4){const mid=Math.floor(m.length/2);m=m.substring(0,mid-1)+'**'+m.substring(mid+1);}else if(m.length>0)m=m[0]+'**';return{name:n,mrn:m};}
         function sanitizeFilename(t){return t.replace(/[<>:"/\\|?*]/g,'').trim();}
         function getExportContent(){updateDataFromUI();let c=data.previewText||generatePreview();const mk=document.getElementById('maskInfo').checked,hp=data.patientName||data.patientMRN;if(mk&&hp){const m=getMaskedInfo();if(data.patientName)c=c.replaceAll(data.patientName,m.name);if(data.patientMRN)c=c.replaceAll(data.patientMRN,m.mrn);}return c;}
         function getFilename(ext){const now=new Date(),ds=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;let p=['病歷整理'];if(data.patientName){const s=sanitizeFilename(data.patientName);if(s)p.push(s);}if(data.patientMRN){const s=sanitizeFilename(data.patientMRN);if(s)p.push(s);}p.push(ds);return p.join('_')+'.'+ext;}
-        function exportTXT(){const c=getExportContent();if(!c.trim())return showToast('預覽為空',true);const b=new Blob([c],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=getFilename('txt');a.click();URL.revokeObjectURL(u);showToast('已匯出');}
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空',true);showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.5</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗',true);}pd.innerHTML='';}
+        function exportTXT(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');const b=new Blob([c],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=getFilename('txt');a.click();URL.revokeObjectURL(u);showToast('已匯出');}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.6.0</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
