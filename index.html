@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.3 Web</title>
+    <title>病歷整理器 V6.5 Web</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,116 +28,31 @@
             --success: #16A34A;
             --shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
-        
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: var(--bg-main);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.5;
-        }
-        
-        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
-        
+        body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg-main); color: var(--text-primary); min-height: 100vh; line-height: 1.5; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
         .icon { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; flex-shrink: 0; }
-        
-        .header {
-            background: var(--bg-card);
-            padding: 14px 20px;
-            border-radius: 10px;
-            margin-bottom: 14px;
-            box-shadow: var(--shadow);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--border-light);
-        }
-        
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
-        .header-text h1 { font-size: 1.1rem; font-weight: 700; }
-        .header-text .subtitle { font-size: 0.7rem; color: var(--text-muted); }
-        .header-right { font-size: 0.65rem; color: var(--text-muted); text-align: right; }
-        
-        .tabs {
-            display: flex;
-            gap: 2px;
-            background: var(--bg-secondary);
-            padding: 5px;
-            border-radius: 8px 8px 0 0;
-            flex-wrap: wrap;
-        }
-        
-        .tab-btn {
-            padding: 7px 12px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 0.75rem;
-            color: var(--text-primary);
-            border-radius: 5px;
-            transition: all 0.2s;
-            font-family: inherit;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            opacity: 0.7;
-        }
-        
+        .header { background: var(--bg-card); padding: 12px 18px; border-radius: 10px; margin-bottom: 12px; box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-light); }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .logo { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; }
+        .header-text h1 { font-size: 1rem; font-weight: 700; }
+        .header-text .subtitle { font-size: 0.65rem; color: var(--text-muted); }
+        .header-right { font-size: 0.6rem; color: var(--text-muted); text-align: right; }
+        .tabs { display: flex; gap: 2px; background: var(--bg-secondary); padding: 4px; border-radius: 8px 8px 0 0; flex-wrap: wrap; }
+        .tab-btn { padding: 6px 10px; border: none; background: transparent; cursor: pointer; font-size: 0.7rem; color: var(--text-primary); border-radius: 5px; transition: all 0.2s; font-family: inherit; font-weight: 500; display: flex; align-items: center; gap: 4px; opacity: 0.7; }
         .tab-btn:hover { background: var(--bg-card); opacity: 1; }
         .tab-btn.active { background: var(--bg-card); opacity: 1; box-shadow: var(--shadow); }
-        
-        .tab-content {
-            display: none;
-            background: var(--bg-card);
-            padding: 16px;
-            border-radius: 0 0 8px 8px;
-            box-shadow: var(--shadow);
-            min-height: 440px;
-            border: 1px solid var(--border-light);
-            border-top: none;
-        }
-        
+        .tab-content { display: none; background: var(--bg-card); padding: 14px; border-radius: 0 0 8px 8px; box-shadow: var(--shadow); min-height: 420px; border: 1px solid var(--border-light); border-top: none; }
         .tab-content.active { display: block; }
-        
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; margin-bottom: 3px; font-weight: 500; font-size: 0.75rem; color: var(--text-muted); }
-        
-        input[type="text"], select, textarea {
-            width: 100%;
-            padding: 7px 10px;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            font-size: 0.8rem;
-            font-family: inherit;
-            transition: all 0.2s;
-            background: var(--bg-input);
-            color: var(--text-primary);
-        }
-        
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; margin-bottom: 2px; font-weight: 500; font-size: 0.7rem; color: var(--text-muted); }
+        input[type="text"], select, textarea { width: 100%; padding: 6px 9px; border: 1px solid var(--border); border-radius: 5px; font-size: 0.8rem; font-family: inherit; transition: all 0.2s; background: var(--bg-input); color: var(--text-primary); }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--text-secondary); box-shadow: 0 0 0 2px rgba(71,85,105,0.12); }
-        textarea { resize: vertical; min-height: 160px; line-height: 1.5; }
-        
-        .date-input { width: 110px !important; font-family: Consolas, monospace; letter-spacing: 0.5px; text-align: center; }
-        .date-input::placeholder { font-size: 0.7rem; letter-spacing: 0; }
-        
-        .btn {
-            padding: 6px 12px;
-            border: 1px solid transparent;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-family: inherit;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
+        textarea { resize: vertical; min-height: 140px; line-height: 1.5; }
+        textarea[readonly] { background: var(--bg-card); color: var(--text-muted); cursor: not-allowed; }
+        .date-input { width: 105px !important; font-family: Consolas, monospace; letter-spacing: 0.5px; text-align: center; }
+        .date-input::placeholder { font-size: 0.65rem; letter-spacing: 0; }
+        .btn { padding: 5px 10px; border: 1px solid transparent; border-radius: 5px; cursor: pointer; font-size: 0.7rem; font-family: inherit; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; }
         .btn-primary { background: var(--text-primary); color: var(--bg-card); }
         .btn-primary:hover { background: #334155; }
         .btn-accent { background: var(--primary); color: white; }
@@ -145,100 +60,52 @@
         .btn-outline { background: transparent; border-color: var(--border); color: var(--text-secondary); }
         .btn-outline:hover { background: var(--bg-secondary); color: var(--text-primary); }
         .btn-success { background: var(--success); color: white; }
-        .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
-        
-        .checkbox-group { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
-        .checkbox-group input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--text-primary); }
-        .checkbox-group label { font-size: 0.75rem; color: var(--text-primary); cursor: pointer; }
-        
-        .two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
-        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } .container { padding: 12px; } }
-        
-        .template-section h4 { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .template-list { display: flex; flex-direction: column; gap: 3px; max-height: 240px; overflow-y: auto; }
-        
-        .template-btn {
-            padding: 7px 10px;
-            border: 1px solid var(--border-light);
-            background: var(--bg-input);
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: left;
-            font-family: inherit;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
+        .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
+        .checkbox-group { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .checkbox-group input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--text-primary); }
+        .checkbox-group label { font-size: 0.7rem; color: var(--text-primary); cursor: pointer; }
+        .two-col { display: grid; grid-template-columns: 1fr 280px; gap: 14px; }
+        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } .container { padding: 10px; } }
+        .template-section h4 { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .template-list { display: flex; flex-direction: column; gap: 2px; }
+        .template-btn { padding: 5px 8px; border: 1px solid var(--border-light); background: var(--bg-input); border-radius: 4px; cursor: pointer; text-align: left; font-family: inherit; font-size: 0.7rem; color: var(--text-secondary); transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
         .template-btn:hover { border-color: var(--border); }
         .template-btn.selected { border-color: var(--primary); background: #FFF7ED; color: var(--text-primary); }
-        
+        .template-controls { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-light); }
+        .template-controls .form-group { margin-bottom: 6px; }
+        .template-controls input { padding: 5px 8px; font-size: 0.75rem; }
         .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border-light); font-size: 0.75rem; }
-        .data-table th { background: var(--bg-secondary); font-weight: 600; color: var(--text-primary); font-size: 0.7rem; text-transform: uppercase; }
+        .data-table th, .data-table td { padding: 7px 8px; text-align: left; border-bottom: 1px solid var(--border-light); font-size: 0.7rem; }
+        .data-table th { background: var(--bg-secondary); font-weight: 600; color: var(--text-primary); font-size: 0.65rem; text-transform: uppercase; }
         .data-table tr:hover td { background: var(--bg-main); }
-        
         .action-btns { display: flex; gap: 2px; }
-        .icon-btn { padding: 5px; border: none; background: transparent; cursor: pointer; border-radius: 4px; color: var(--text-muted); transition: all 0.2s; display: flex; }
+        .icon-btn { padding: 4px; border: none; background: transparent; cursor: pointer; border-radius: 3px; color: var(--text-muted); transition: all 0.2s; display: flex; }
         .icon-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
         .icon-btn.danger:hover { background: #FEE2E2; color: var(--danger); }
-        
-        .editor-panel { background: var(--bg-secondary); padding: 10px 12px; border-radius: 6px; margin-bottom: 12px; display: none; border: 1px solid var(--border); }
+        .editor-panel { background: var(--bg-secondary); padding: 10px; border-radius: 6px; margin-bottom: 10px; display: none; border: 1px solid var(--border); }
         .editor-panel.active { display: block; }
-        .editor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
-        .editor-header h4 { font-size: 0.8rem; color: var(--text-primary); font-weight: 600; margin-right: auto; }
-        .editor-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .editor-row label { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
-        
-        .bottom-bar {
-            background: var(--bg-card);
-            padding: 10px 16px;
-            border-radius: 8px;
-            margin-top: 14px;
-            box-shadow: var(--shadow);
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 8px;
-            border: 1px solid var(--border-light);
-        }
-        
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: var(--text-primary);
-            color: var(--bg-card);
-            padding: 8px 16px;
-            border-radius: 6px;
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.3s;
-            font-size: 0.75rem;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
+        .editor-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+        .editor-header h4 { font-size: 0.75rem; color: var(--text-primary); font-weight: 600; margin-right: auto; }
+        .editor-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .editor-row label { font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; }
+        .category-group { display: flex; gap: 10px; align-items: center; }
+        .category-group label { display: flex; align-items: center; gap: 3px; font-size: 0.7rem; color: var(--text-primary); cursor: pointer; }
+        .category-group input[type="checkbox"] { width: 13px; height: 13px; accent-color: var(--text-primary); }
+        .bottom-bar { background: var(--bg-card); padding: 10px 14px; border-radius: 8px; margin-top: 12px; box-shadow: var(--shadow); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; border: 1px solid var(--border-light); }
+        .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-primary); color: var(--bg-card); padding: 7px 14px; border-radius: 5px; z-index: 1000; opacity: 0; transition: all 0.3s; font-size: 0.7rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: 5px; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast.error { background: var(--danger); }
-        
-        .helper-text { font-size: 0.7rem; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 4px; }
-        .inline-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .inline-row .form-group { flex: 1; min-width: 160px; }
-        .table-container { max-height: 220px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 6px; }
-        #previewText { min-height: 340px; font-family: 'Noto Sans TC', monospace; font-size: 0.75rem; line-height: 1.6; }
-        
+        .helper-text { font-size: 0.65rem; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
+        .inline-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .inline-row .form-group { flex: 1; min-width: 140px; }
+        .table-container { max-height: 200px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: 5px; }
+        #previewText { min-height: 320px; font-family: 'Noto Sans TC', monospace; font-size: 0.7rem; line-height: 1.6; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 2px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        
         #pdfContent { position: absolute; left: -9999px; top: 0; width: 800px; padding: 40px; background: white; font-family: 'Noto Sans TC', sans-serif; }
+        .edit-mode-hint { font-size: 0.65rem; color: var(--primary); margin-bottom: 6px; display: none; }
+        .edit-mode-hint.show { display: flex; align-items: center; gap: 4px; }
     </style>
 </head>
 <body>
@@ -247,8 +114,8 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.3</h1>
-                    <div class="subtitle">彰濱癌症中心 · Chang Bing Show Chwan Memorial Hospital</div>
+                    <h1>病歷整理器 V6.5</h1>
+                    <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
             <div class="header-right">© SELA<br>Radiation Oncology</div>
@@ -271,50 +138,55 @@
                         <input type="checkbox" id="includePrompt" checked>
                         <label for="includePrompt">輸出時包含 Prompt</label>
                     </div>
+                    <div class="edit-mode-hint" id="editModeHint"><svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>編輯模式：修改後請按儲存</div>
                     <div class="form-group">
                         <label>Prompt 編輯區</label>
-                        <textarea id="promptText" rows="13" placeholder="在此輸入 Prompt..."></textarea>
+                        <textarea id="promptText" rows="12" placeholder="選擇範本後按「編輯」可修改內容..." readonly></textarea>
                     </div>
                 </div>
                 <div class="template-section">
                     <h4>範本清單</h4>
                     <div class="template-list" id="templateList"></div>
-                    <div class="form-group" style="margin-top: 10px;">
-                        <label>範本名稱</label>
-                        <input type="text" id="templateName" placeholder="輸入名稱">
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="saveTemplateContent()"><svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>儲存</button>
-                        <button class="btn btn-outline" onclick="renameTemplate()"><svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>命名</button>
+                    <div class="template-controls">
+                        <div class="form-group">
+                            <label>範本名稱</label>
+                            <input type="text" id="templateName" placeholder="輸入名稱">
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline" id="btnEditTemplate" onclick="enableEditMode()"><svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>編輯</button>
+                            <button class="btn btn-primary" id="btnSaveTemplate" onclick="saveTemplateContent()" style="display:none;"><svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>儲存</button>
+                            <button class="btn btn-outline" id="btnCancelEdit" onclick="cancelEditMode()" style="display:none;"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
+                            <button class="btn btn-outline" onclick="renameTemplate()"><svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>命名</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="tab-content" id="tab-patient">
-            <div class="helper-text"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>姓名/病歷號會自動加入檔名；ECOG/衰弱量表選填</div>
-            <div class="form-group"><label>姓名</label><input type="text" id="patientName" placeholder="病人姓名" style="max-width:380px;"></div>
-            <div class="form-group"><label>病歷號</label><input type="text" id="patientMRN" placeholder="病歷號" style="max-width:380px;"></div>
+            <div class="helper-text"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>姓名/病歷號會自動加入檔名</div>
+            <div class="form-group"><label>姓名</label><input type="text" id="patientName" placeholder="病人姓名" style="max-width:340px;"></div>
+            <div class="form-group"><label>病歷號</label><input type="text" id="patientMRN" placeholder="病歷號" style="max-width:340px;"></div>
             <div class="inline-row">
-                <div class="form-group"><label>ECOG</label><select id="ecog" style="max-width:180px;"><option value="">不填</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
-                <div class="form-group"><label>衰弱量表</label><select id="cfs" style="max-width:240px;"><option value="">不填</option><option value="1">1：非常健壯</option><option value="2">2：健康良好</option><option value="3">3：日常可自理</option><option value="4">4：脆弱但尚可自理</option><option value="5">5：輕度衰弱</option><option value="6">6：中度衰弱</option><option value="7">7：重度衰弱</option><option value="8">8：極重度衰弱</option><option value="9">9：末期病人</option></select></div>
+                <div class="form-group"><label>ECOG</label><select id="ecog" style="max-width:160px;"><option value="">不填</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+                <div class="form-group"><label>衰弱量表</label><select id="cfs" style="max-width:220px;"><option value="">不填</option><option value="1">1：非常健壯</option><option value="2">2：健康良好</option><option value="3">3：日常可自理</option><option value="4">4：脆弱但尚可自理</option><option value="5">5：輕度衰弱</option><option value="6">6：中度衰弱</option><option value="7">7：重度衰弱</option><option value="8">8：極重度衰弱</option><option value="9">9：末期病人</option></select></div>
             </div>
             <div class="checkbox-group"><input type="checkbox" id="maskInfo"><label for="maskInfo">匯出時遮蔽姓名與病歷號</label></div>
             <button class="btn btn-outline" onclick="clearPatientTab()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
         </div>
         
         <div class="tab-content" id="tab-summary">
-            <div class="form-group"><label>病摘內容</label><textarea id="summaryText" rows="14" placeholder="輸入病摘..."></textarea></div>
+            <div class="form-group"><label>病摘內容</label><textarea id="summaryText" rows="13" placeholder="輸入病摘..."></textarea></div>
             <button class="btn btn-outline" onclick="clearField('summaryText')"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
         </div>
         
         <div class="tab-content" id="tab-lab">
-            <div class="form-group"><label>檢驗數據</label><textarea id="labText" rows="14" placeholder="輸入檢驗數據..."></textarea></div>
+            <div class="form-group"><label>檢驗數據</label><textarea id="labText" rows="13" placeholder="輸入檢驗數據..."></textarea></div>
             <button class="btn btn-outline" onclick="clearField('labText')"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
         </div>
         
         <div class="tab-content" id="tab-pathology">
-            <div class="btn-group" style="margin-bottom:10px;">
+            <div class="btn-group" style="margin-bottom:8px;">
                 <button class="btn btn-primary" onclick="startPathologyEdit(null)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增</button>
                 <button class="btn btn-outline" onclick="clearAllPathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空</button>
             </div>
@@ -323,18 +195,22 @@
                     <h4>病理報告</h4>
                     <div class="editor-row">
                         <label>日期</label>
-                        <input type="text" id="pathologyDate" class="date-input" placeholder="20211227" onblur="formatDateInput(this)">
+                        <input type="text" id="pathologyDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)">
+                        <div class="category-group">
+                            <label><input type="checkbox" id="pathCatBiopsy" checked> Biopsy</label>
+                            <label><input type="checkbox" id="pathCatPathology"> Pathology</label>
+                        </div>
                         <button class="btn btn-success" onclick="savePathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
                         <button class="btn btn-outline" onclick="cancelPathologyEdit()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
                     </div>
                 </div>
-                <textarea id="pathologyContent" rows="5" placeholder="報告內容..." style="margin-top:8px;"></textarea>
+                <textarea id="pathologyContent" rows="4" placeholder="報告內容..." style="margin-top:6px;"></textarea>
             </div>
-            <div class="table-container"><table class="data-table"><thead><tr><th style="width:90px;">日期</th><th>內容預覽</th><th style="width:70px;">操作</th></tr></thead><tbody id="pathologyTableBody"></tbody></table></div>
+            <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:90px;">分類</th><th>內容預覽</th><th style="width:60px;">操作</th></tr></thead><tbody id="pathologyTableBody"></tbody></table></div>
         </div>
         
         <div class="tab-content" id="tab-imaging">
-            <div class="btn-group" style="margin-bottom:10px;">
+            <div class="btn-group" style="margin-bottom:8px;">
                 <button class="btn btn-primary" onclick="startImagingEdit(null)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增</button>
                 <button class="btn btn-outline" onclick="clearAllImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空</button>
             </div>
@@ -343,22 +219,22 @@
                     <h4>影像報告</h4>
                     <div class="editor-row">
                         <label>種類</label>
-                        <select id="imagingType" style="width:100px;"><option>CT</option><option>MRI</option><option>Bone scan</option><option>PET-CT</option><option>Sono</option><option>Breast Sono</option><option>Endoscopy</option><option>Other</option></select>
+                        <select id="imagingType" style="width:95px;"><option>CT</option><option>MRI</option><option>Bone scan</option><option>PET-CT</option><option>Sono</option><option>Breast Sono</option><option>Endoscopy</option><option>Other</option></select>
                         <label>日期</label>
-                        <input type="text" id="imagingDate" class="date-input" placeholder="20211227" onblur="formatDateInput(this)">
+                        <input type="text" id="imagingDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)">
                         <button class="btn btn-success" onclick="saveImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
                         <button class="btn btn-outline" onclick="cancelImagingEdit()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
                     </div>
                 </div>
-                <textarea id="imagingContent" rows="5" placeholder="報告內容..." style="margin-top:8px;"></textarea>
+                <textarea id="imagingContent" rows="4" placeholder="報告內容..." style="margin-top:6px;"></textarea>
             </div>
-            <div class="table-container"><table class="data-table"><thead><tr><th style="width:90px;">日期</th><th style="width:90px;">種類</th><th style="width:70px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
+            <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:85px;">種類</th><th style="width:60px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
         </div>
         
         <div class="tab-content" id="tab-preview">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                 <button class="btn btn-primary" onclick="refreshPreview()"><svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>重新產生</button>
-                <span style="font-size:0.7rem;color:var(--text-muted);">依各頁資料產生完整輸出</span>
+                <span style="font-size:0.65rem;color:var(--text-muted);">依各頁資料產生輸出</span>
             </div>
             <div class="form-group"><label>預覽輸出</label><textarea id="previewText" placeholder="預覽內容..."></textarea></div>
         </div>
@@ -379,45 +255,50 @@
     <div id="pdfContent"></div>
     
     <script>
-        const FRAILTY_DESC = {"1":"非常健壯","2":"健康良好","3":"日常可自理","4":"脆弱但尚可自理","5":"輕度衰弱","6":"中度衰弱","7":"重度衰弱","8":"極重度衰弱","9":"末期病人"};
-        let data = {promptText:"",includePrompt:true,promptTemplates:Array.from({length:10},(_,i)=>({name:`範本${i+1}`,content:""})),patientName:"",patientMRN:"",ecog:"",cfs:"",medicalSummary:"",labData:"",pathology:[],imaging:[],previewText:""};
-        let selectedTemplateIndex=0,pathologyEditIndex=null,imagingEditIndex=null;
+        const FRAILTY_DESC={"1":"非常健壯","2":"健康良好","3":"日常可自理","4":"脆弱但尚可自理","5":"輕度衰弱","6":"中度衰弱","7":"重度衰弱","8":"極重度衰弱","9":"末期病人"};
+        let data={promptText:"",includePrompt:true,promptTemplates:Array.from({length:10},(_,i)=>({name:`範本${i+1}`,content:""})),patientName:"",patientMRN:"",ecog:"",cfs:"",medicalSummary:"",labData:"",pathology:[],imaging:[],previewText:""};
+        let selectedTemplateIndex=0,pathologyEditIndex=null,imagingEditIndex=null,isEditMode=false,originalContent="";
         const icons={file:'<svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',edit:'<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',trash:'<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',check:'<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'};
         
-        function formatDateInput(el){let v=el.value.replace(/\D/g,'');if(v.length===8)el.value=`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;}
+        function formatDateInput(el){
+            let v=el.value.replace(/\D/g,'');
+            if(v.length>=8){v=v.substring(0,8);el.value=`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;}
+        }
         function normalizeDate(s){s=(s||'').trim().replace(/\D/g,'');return s.length===8?`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`:s;}
         function isValidDate(s){const n=normalizeDate(s);if(!/^\d{4}-\d{2}-\d{2}$/.test(n))return false;const[y,m,d]=n.split('-').map(Number),dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
         
         document.addEventListener('DOMContentLoaded',()=>{loadData();initTabs();renderTemplateList();renderPathologyTable();renderImagingTable();applyDataToUI();});
         function initTabs(){document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(`tab-${b.dataset.tab}`).classList.add('active');}));}
-        function showToast(msg,err=false){const t=document.getElementById('toast');t.innerHTML=`${icons.check} ${msg}`;t.className='toast show'+(err?' error':'');setTimeout(()=>t.classList.remove('show'),2200);}
+        function showToast(msg,err=false){const t=document.getElementById('toast');t.innerHTML=`${icons.check} ${msg}`;t.className='toast show'+(err?' error':'');setTimeout(()=>t.classList.remove('show'),2000);}
         
         function renderTemplateList(){const l=document.getElementById('templateList');l.innerHTML='';data.promptTemplates.forEach((t,i)=>{const b=document.createElement('button');b.className='template-btn'+(i===selectedTemplateIndex?' selected':'');b.innerHTML=`${icons.file} ${t.name}${t.content.trim()?'*':''}`;b.onclick=()=>selectTemplate(i);l.appendChild(b);});}
-        function selectTemplate(i){updateDataFromUI();selectedTemplateIndex=i;const t=data.promptTemplates[i];document.getElementById('promptText').value=t.content;document.getElementById('templateName').value=t.name;renderTemplateList();showToast(`載入範本${i+1}`);}
-        function saveTemplateContent(){updateDataFromUI();const n=document.getElementById('templateName').value.trim()||`範本${selectedTemplateIndex+1}`;data.promptTemplates[selectedTemplateIndex]={name:n,content:data.promptText};renderTemplateList();saveData();showToast('已儲存');}
+        function selectTemplate(i){if(isEditMode){if(!confirm('放棄修改？'))return;cancelEditMode();}selectedTemplateIndex=i;const t=data.promptTemplates[i];document.getElementById('promptText').value=t.content;document.getElementById('templateName').value=t.name;renderTemplateList();}
+        function enableEditMode(){isEditMode=true;originalContent=document.getElementById('promptText').value;document.getElementById('promptText').removeAttribute('readonly');document.getElementById('btnEditTemplate').style.display='none';document.getElementById('btnSaveTemplate').style.display='';document.getElementById('btnCancelEdit').style.display='';document.getElementById('editModeHint').classList.add('show');document.getElementById('promptText').focus();}
+        function cancelEditMode(){isEditMode=false;document.getElementById('promptText').value=originalContent;document.getElementById('promptText').setAttribute('readonly','');document.getElementById('btnEditTemplate').style.display='';document.getElementById('btnSaveTemplate').style.display='none';document.getElementById('btnCancelEdit').style.display='none';document.getElementById('editModeHint').classList.remove('show');}
+        function saveTemplateContent(){const n=document.getElementById('templateName').value.trim()||`範本${selectedTemplateIndex+1}`;data.promptTemplates[selectedTemplateIndex]={name:n,content:document.getElementById('promptText').value};isEditMode=false;document.getElementById('promptText').setAttribute('readonly','');document.getElementById('btnEditTemplate').style.display='';document.getElementById('btnSaveTemplate').style.display='none';document.getElementById('btnCancelEdit').style.display='none';document.getElementById('editModeHint').classList.remove('show');renderTemplateList();saveData();showToast('已儲存');}
         function renameTemplate(){const n=document.getElementById('templateName').value.trim();if(!n)return showToast('請輸入名稱',true);data.promptTemplates[selectedTemplateIndex].name=n;renderTemplateList();saveData();showToast('已命名');}
         
-        function renderPathologyTable(){const tb=document.getElementById('pathologyTableBody');data.pathology.sort((a,b)=>a.date.localeCompare(b.date));if(!data.pathology.length){tb.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px;">尚無資料</td></tr>';return;}tb.innerHTML=data.pathology.map((p,i)=>`<tr><td>${p.date}</td><td>${p.text.replace(/\n/g,' ').substring(0,35)}${p.text.length>35?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startPathologyEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deletePathology(${i})">${icons.trash}</button></td></tr>`).join('');}
-        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';}document.getElementById('pathologyDate').focus();}
-        function savePathology(){const d=document.getElementById('pathologyDate').value,t=document.getElementById('pathologyContent').value.trim();if(!d||!t)return showToast('日期與內容必填',true);const nd=normalizeDate(d);if(!isValidDate(nd))return showToast('日期格式錯誤',true);document.getElementById('pathologyDate').value=nd;const e={date:nd,text:t};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();showToast('已儲存');}
+        function renderPathologyTable(){const tb=document.getElementById('pathologyTableBody');data.pathology.sort((a,b)=>a.date.localeCompare(b.date));if(!data.pathology.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.pathology.map((p,i)=>`<tr><td>${p.date}</td><td>${p.category||'Biopsy'}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startPathologyEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deletePathology(${i})">${icons.trash}</button></td></tr>`).join('');}
+        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;}document.getElementById('pathologyDate').focus();}
+        function savePathology(){const d=document.getElementById('pathologyDate').value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked;if(!d||!t)return showToast('日期與內容必填',true);if(!catB&&!catP)return showToast('請選擇分類',true);const nd=normalizeDate(d);if(!isValidDate(nd))return showToast('日期格式錯誤',true);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();showToast('已儲存');}
         function cancelPathologyEdit(){document.getElementById('pathologyEditor').classList.remove('active');pathologyEditIndex=null;}
         function deletePathology(i){if(confirm('確定刪除？')){data.pathology.splice(i,1);renderPathologyTable();saveData();showToast('已刪除');}}
         function clearAllPathology(){if(!data.pathology.length)return;if(confirm('確定清空？')){data.pathology=[];renderPathologyTable();saveData();showToast('已清空');}}
         
-        function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:24px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
+        function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
         function startImagingEdit(i){imagingEditIndex=i;document.getElementById('imagingEditor').classList.add('active');if(i!==null&&data.imaging[i]){document.getElementById('imagingType').value=data.imaging[i].type;document.getElementById('imagingDate').value=data.imaging[i].date;document.getElementById('imagingContent').value=data.imaging[i].text;}else{document.getElementById('imagingType').value='CT';document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';}document.getElementById('imagingDate').focus();}
-        function saveImaging(){const tp=document.getElementById('imagingType').value,d=document.getElementById('imagingDate').value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t)return showToast('所有欄位必填',true);const nd=normalizeDate(d);if(!isValidDate(nd))return showToast('日期格式錯誤',true);document.getElementById('imagingDate').value=nd;const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;cancelImagingEdit();renderImagingTable();saveData();showToast('已儲存');}
+        function saveImaging(){const tp=document.getElementById('imagingType').value,d=document.getElementById('imagingDate').value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t)return showToast('所有欄位必填',true);const nd=normalizeDate(d);if(!isValidDate(nd))return showToast('日期格式錯誤',true);const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;cancelImagingEdit();renderImagingTable();saveData();showToast('已儲存');}
         function cancelImagingEdit(){document.getElementById('imagingEditor').classList.remove('active');imagingEditIndex=null;}
         function deleteImaging(i){if(confirm('確定刪除？')){data.imaging.splice(i,1);renderImagingTable();saveData();showToast('已刪除');}}
         function clearAllImaging(){if(!data.imaging.length)return;if(confirm('確定清空？')){data.imaging=[];renderImagingTable();saveData();showToast('已清空');}}
         
-        function generatePreview(){updateDataFromUI();let p=[];if(data.includePrompt&&data.promptText.trim()){p.push(data.promptText);p.push('\n'+'─'.repeat(30)+'\n');}const hp=data.patientName||data.patientMRN||data.ecog||data.cfs;if(hp){p.push('【病人資料】');p.push(`姓名：${data.patientName}`);p.push(`病歷號：${data.patientMRN}`);if(data.ecog)p.push(`ECOG: ${data.ecog}`);if(data.cfs)p.push(`衰弱量表: ${data.cfs}${FRAILTY_DESC[data.cfs]?`（${FRAILTY_DESC[data.cfs]}）`:''}`);p.push('─'.repeat(30));}if(data.medicalSummary.trim()){p.push('\n【病摘】');p.push(data.medicalSummary);p.push('─'.repeat(30));}if(data.labData.trim()){p.push('\n【檢驗資料】');p.push(data.labData);p.push('─'.repeat(30));}if(data.pathology.length){p.push('\n【病理報告】');data.pathology.forEach(x=>{p.push(`Date: ${x.date}`);p.push('Content:');p.push(x.text);p.push('');});p.push('─'.repeat(15));}if(data.imaging.length){p.push('\n【影像報告】');data.imaging.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Type: ${x.type}`);p.push('Content:');p.push(x.text);p.push('');});p.push('─'.repeat(15));}return p.join('\n').trim();}
-        function refreshPreview(){const pv=generatePreview();data.previewText=pv;document.getElementById('previewText').value=pv;saveData();showToast('已產生預覽');}
+        function generatePreview(){updateDataFromUI();let p=[];if(data.includePrompt&&data.promptText.trim()){p.push(data.promptText);p.push('\n'+'─'.repeat(30)+'\n');}const hp=data.patientName||data.patientMRN||data.ecog||data.cfs;if(hp){p.push('【病人資料】');p.push(`姓名：${data.patientName}`);p.push(`病歷號：${data.patientMRN}`);if(data.ecog)p.push(`ECOG: ${data.ecog}`);if(data.cfs)p.push(`衰弱量表: ${data.cfs}${FRAILTY_DESC[data.cfs]?`（${FRAILTY_DESC[data.cfs]}）`:''}`);p.push('─'.repeat(30));}if(data.medicalSummary.trim()){p.push('\n【病摘】');p.push(data.medicalSummary);p.push('─'.repeat(30));}if(data.labData.trim()){p.push('\n【檢驗資料】');p.push(data.labData);p.push('─'.repeat(30));}if(data.pathology.length){p.push('\n【病理報告】');data.pathology.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Category: ${x.category||'Biopsy'}`);p.push('Content:');p.push(x.text);p.push('');});p.push('─'.repeat(15));}if(data.imaging.length){p.push('\n【影像報告】');data.imaging.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Type: ${x.type}`);p.push('Content:');p.push(x.text);p.push('');});p.push('─'.repeat(15));}return p.join('\n').trim();}
+        function refreshPreview(){const pv=generatePreview();data.previewText=pv;document.getElementById('previewText').value=pv;saveData();showToast('已產生');}
         
         function updateDataFromUI(){data.promptText=document.getElementById('promptText').value;data.includePrompt=document.getElementById('includePrompt').checked;data.patientName=document.getElementById('patientName').value;data.patientMRN=document.getElementById('patientMRN').value;data.ecog=document.getElementById('ecog').value;data.cfs=document.getElementById('cfs').value;data.medicalSummary=document.getElementById('summaryText').value;data.labData=document.getElementById('labText').value;data.previewText=document.getElementById('previewText').value;}
-        function applyDataToUI(){document.getElementById('promptText').value=data.promptText;document.getElementById('includePrompt').checked=data.includePrompt;document.getElementById('patientName').value=data.patientName;document.getElementById('patientMRN').value=data.patientMRN;document.getElementById('ecog').value=data.ecog;document.getElementById('cfs').value=data.cfs;document.getElementById('summaryText').value=data.medicalSummary;document.getElementById('labText').value=data.labData;document.getElementById('previewText').value=data.previewText;}
-        function saveData(){updateDataFromUI();localStorage.setItem('mro_v63',JSON.stringify(data));}
-        function loadData(){const s=localStorage.getItem('mro_v63');if(s)try{data={...data,...JSON.parse(s)};}catch(e){}}
+        function applyDataToUI(){document.getElementById('promptText').value=data.promptTemplates[selectedTemplateIndex]?.content||'';document.getElementById('templateName').value=data.promptTemplates[selectedTemplateIndex]?.name||'';document.getElementById('includePrompt').checked=data.includePrompt;document.getElementById('patientName').value=data.patientName;document.getElementById('patientMRN').value=data.patientMRN;document.getElementById('ecog').value=data.ecog;document.getElementById('cfs').value=data.cfs;document.getElementById('summaryText').value=data.medicalSummary;document.getElementById('labText').value=data.labData;document.getElementById('previewText').value=data.previewText;}
+        function saveData(){updateDataFromUI();localStorage.setItem('chart_v65',JSON.stringify(data));}
+        function loadData(){const s=localStorage.getItem('chart_v65');if(s)try{data={...data,...JSON.parse(s)};}catch(e){}}
         function clearField(id){document.getElementById(id).value='';saveData();showToast('已清除');}
         function clearPatientTab(){['patientName','patientMRN'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');document.getElementById('maskInfo').checked=false;saveData();showToast('已清除');}
         function clearAll(){if(!confirm('清除所有資料？（保留範本）'))return;const t=data.promptTemplates;data={promptText:'',includePrompt:true,promptTemplates:t,patientName:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',pathology:[],imaging:[],previewText:''};applyDataToUI();renderPathologyTable();renderImagingTable();saveData();showToast('已清除');}
@@ -426,8 +307,8 @@
         function sanitizeFilename(t){return t.replace(/[<>:"/\\|?*]/g,'').trim();}
         function getExportContent(){updateDataFromUI();let c=data.previewText||generatePreview();const mk=document.getElementById('maskInfo').checked,hp=data.patientName||data.patientMRN;if(mk&&hp){const m=getMaskedInfo();if(data.patientName)c=c.replaceAll(data.patientName,m.name);if(data.patientMRN)c=c.replaceAll(data.patientMRN,m.mrn);}return c;}
         function getFilename(ext){const now=new Date(),ds=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;let p=['病歷整理'];if(data.patientName){const s=sanitizeFilename(data.patientName);if(s)p.push(s);}if(data.patientMRN){const s=sanitizeFilename(data.patientMRN);if(s)p.push(s);}p.push(ds);return p.join('_')+'.'+ext;}
-        function exportTXT(){const c=getExportContent();if(!c.trim())return showToast('預覽為空',true);const b=new Blob([c],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=getFilename('txt');a.click();URL.revokeObjectURL(u);showToast('已匯出TXT');}
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空',true);showToast('產生PDF中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.3</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出PDF');}catch(e){console.error(e);showToast('PDF失敗',true);}pd.innerHTML='';}
+        function exportTXT(){const c=getExportContent();if(!c.trim())return showToast('預覽為空',true);const b=new Blob([c],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=getFilename('txt');a.click();URL.revokeObjectURL(u);showToast('已匯出');}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空',true);showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.5</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗',true);}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
