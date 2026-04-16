@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.10.1</title>
+    <title>病歷整理器 V6.10.3</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,7 +51,7 @@
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--text-secondary); box-shadow: 0 0 0 2px rgba(71,85,105,0.12); }
         input.error, .date-input.error { border-color: var(--danger) !important; background: #FEF2F2 !important; }
         textarea { resize: vertical; min-height: 140px; line-height: 1.5; }
-        textarea[readonly] { background: var(--bg-card); color: var(--text-muted); cursor: not-allowed; }
+        textarea[readonly] { background: var(--bg-card); color: var(--text-primary); cursor: text; }
         .date-input { width: 105px !important; font-family: Consolas, monospace; letter-spacing: 0.5px; text-align: center; }
         .date-input::placeholder { font-size: 0.65rem; letter-spacing: 0; }
         .age-input { width: 60px !important; text-align: center; }
@@ -140,6 +140,9 @@
         .patient-info-bar .info-item { display: flex; align-items: center; gap: 4px; }
         .patient-info-bar .info-label { color: #94A3B8; }
         .patient-info-bar .info-value { font-weight: 500; }
+        .patient-info-bar .copy-btn { background: transparent; border: none; color: #94A3B8; cursor: pointer; padding: 2px 4px; border-radius: 3px; display: inline-flex; align-items: center; transition: all 0.2s; }
+        .patient-info-bar .copy-btn:hover { background: rgba(255,255,255,0.1); color: #E2E8F0; }
+        .patient-info-bar .copy-btn svg { width: 12px; height: 12px; }
     </style>
 </head>
 <body>
@@ -148,7 +151,7 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.10.1</h1>
+                    <h1>病歷整理器 V6.10.3</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -599,8 +602,8 @@
         
         function updateDataFromUI(){data.promptText=document.getElementById('promptText').value;data.includePrompt=document.getElementById('includePrompt').checked;data.patientName=document.getElementById('patientName').value;data.patientAge=document.getElementById('patientAge').value;data.patientMRN=document.getElementById('patientMRN').value;data.ecog=document.getElementById('ecog').value;data.cfs=document.getElementById('cfs').value;data.medicalSummary=document.getElementById('summaryText').value;data.labData=document.getElementById('labText').value;data.previewText=document.getElementById('previewText').value;}
         function applyDataToUI(){document.getElementById('promptText').value=data.promptTemplates[selectedTemplateIndex]?.content||'';document.getElementById('includePrompt').checked=data.includePrompt;document.getElementById('patientName').value=data.patientName;document.getElementById('patientAge').value=data.patientAge||'';document.getElementById('patientMRN').value=data.patientMRN;document.getElementById('ecog').value=data.ecog;document.getElementById('cfs').value=data.cfs;document.getElementById('summaryText').value=data.medicalSummary;document.getElementById('labText').value=data.labData;document.getElementById('previewText').value=data.previewText;updatePatientInfoBar();}
-        function saveData(){updateDataFromUI();localStorage.setItem('chart_v6101',JSON.stringify(data));}
-        function loadData(){const s=localStorage.getItem('chart_v6101');if(s)try{data={...data,...JSON.parse(s)};}catch(e){}}
+        function saveData(){updateDataFromUI();localStorage.setItem('chart_v6103',JSON.stringify(data));}
+        function loadData(){const s=localStorage.getItem('chart_v6103');if(s)try{data={...data,...JSON.parse(s)};}catch(e){}}
         function clearField(id){document.getElementById(id).value='';saveData();markDataChanged();showToast('已清除');}
         function clearPatientTab(){['patientName','patientMRN','patientAge'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');document.getElementById('maskInfo').checked=false;saveData();markDataChanged();updatePatientInfoBar();showToast('已清除');}
         function clearAll(){if(!confirm('清除所有資料？（保留範本）'))return;const t=data.promptTemplates;data={promptText:'',includePrompt:true,promptTemplates:t,patientName:'',patientAge:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',tumorMarkers:[],pathology:[],imaging:[],previewText:''};applyDataToUI();renderMarkerTable();renderPathologyTable();renderImagingTable();saveData();dataChanged=false;document.getElementById('previewNotice').className='preview-notice';document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>按「產生預覽」整合各頁資料';updatePatientInfoBar();showToast('已清除');}
@@ -611,12 +614,19 @@
             const age=document.getElementById('patientAge').value.trim();
             const bar=document.getElementById('patientInfoBar');
             if(!name&&!mrn&&!age){bar.classList.remove('show');return;}
+            const copyIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
             let html=[];
-            if(mrn)html.push(`<span class="info-item"><span class="info-label">病歷號：</span><span class="info-value">${mrn}</span></span>`);
-            if(name)html.push(`<span class="info-item"><span class="info-label">姓名：</span><span class="info-value">${name}</span></span>`);
+            if(mrn)html.push(`<span class="info-item"><span class="info-label">病歷號：</span><span class="info-value">${mrn}</span><button class="copy-btn" onclick="copyInfoValue('${mrn}')" title="複製">${copyIcon}</button></span>`);
+            if(name)html.push(`<span class="info-item"><span class="info-label">姓名：</span><span class="info-value">${name}</span><button class="copy-btn" onclick="copyInfoValue('${name}')" title="複製">${copyIcon}</button></span>`);
             if(age)html.push(`<span class="info-item"><span class="info-label">年齡：</span><span class="info-value">${age} 歲</span></span>`);
             bar.innerHTML=html.join('');
             bar.classList.add('show');
+        }
+        function copyInfoValue(val){
+            if(navigator.clipboard&&navigator.clipboard.writeText){
+                navigator.clipboard.writeText(val).then(()=>showToast('已複製')).catch(()=>fallbackCopy(val));
+            }else{fallbackCopy(val);}
+            function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showToast('已複製');}catch(e){showToast('複製失敗','error');}document.body.removeChild(ta);}
         }
         
         function getMaskedInfo(){let n=data.patientName,m=data.patientMRN;if(n.length>2)n=n[0]+'○'.repeat(n.length-2)+n[n.length-1];else if(n.length===2)n=n[0]+'○';if(m.length>4){const mid=Math.floor(m.length/2);m=m.substring(0,mid-1)+'**'+m.substring(mid+1);}else if(m.length>0)m=m[0]+'**';return{name:n,mrn:m};}
@@ -664,14 +674,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.10.1</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.10.3</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.10.1</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.10.3</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
