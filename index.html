@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.10.2</title>
+    <title>病歷整理器 V6.11.0</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -140,6 +140,9 @@
         .patient-info-bar .info-item { display: flex; align-items: center; gap: 4px; }
         .patient-info-bar .info-label { color: #94A3B8; }
         .patient-info-bar .info-value { font-weight: 500; }
+        .patient-info-bar .copy-btn { background: transparent; border: none; color: #94A3B8; cursor: pointer; padding: 2px 4px; border-radius: 3px; display: inline-flex; align-items: center; transition: all 0.2s; }
+        .patient-info-bar .copy-btn:hover { background: rgba(255,255,255,0.1); color: #E2E8F0; }
+        .patient-info-bar .copy-btn svg { width: 12px; height: 12px; }
     </style>
 </head>
 <body>
@@ -148,7 +151,7 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.10.2</h1>
+                    <h1>病歷整理器 V6.11.0</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -192,6 +195,7 @@
                             <button class="btn btn-primary" id="btnSaveTemplate" onclick="saveTemplateContent()" style="display:none;"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
                             <button class="btn btn-outline" id="btnCancelEdit" onclick="cancelEditMode()" style="display:none;"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
                             <button class="btn btn-outline" onclick="showRenamePanel()"><svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>命名</button>
+                            <button class="btn btn-accent" onclick="showPresetModal()"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>載入預設</button>
                         </div>
                     </div>
                     <div class="rename-panel" id="renamePanel">
@@ -389,6 +393,21 @@
         </div>
     </div>
     
+    <div class="modal-overlay" id="presetModal">
+        <div class="modal" style="max-width:350px;">
+            <h3><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>載入預設範本</h3>
+            <div class="form-group">
+                <label>請輸入密碼</label>
+                <input type="password" id="presetPassword" placeholder="密碼..." onkeypress="if(event.key==='Enter')loadPresetTemplate()">
+                <div class="hint">載入後會覆蓋範本 1 的內容</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closePresetModal()">取消</button>
+                <button class="btn btn-primary" onclick="loadPresetTemplate()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>確定</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // ===== 授權驗證（目前停用）=====
         const ENABLE_DOMAIN_PROTECTION = false; // 設為 true 啟用網域保護
@@ -518,6 +537,118 @@
         function clearAiResult(){document.getElementById('aiResultText').value='';showToast('已清除');}
         // ===== AI 設定結束 =====
         
+        // ===== 預設範本功能 =====
+        const PRESET_PASSWORD = 'Sela1227';
+        const PRESET_TEMPLATE = {
+            name: '放腫病歷整理',
+            content: `Prompt：放射腫瘤科病歷整理
+
+你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成結構化的臨床摘要。
+
+核心原則（最高優先）：
+1. 只能使用貼上的資料，絕對不可自行推斷、補充、或引用任何外部醫學知識與記憶
+2. 資料不足時，直接標註「資料不足」，不可猜測或填入看似合理的內容
+3. 良性、退化性、偶發性無關病灶不需提及，只保留與主診斷相關的陽性發現
+
+輸出格式：
+
+## 診斷
+一句話診斷，包含：腫瘤部位、病理類型、分化程度、p16狀態、TNM分期（AJCC版本）、主要淋巴結情況、治療意圖。僅使用原始資料中明確記載的資訊。
+
+---
+## 病史
+
+Present Illness:
+2-3句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。診斷後才執行的治療省略不寫。
+
+Past Medical History:
+只列疾病或手術名稱，省略療程細節與短期病程變化。資料不足則標註。
+
+Family History:
+資料不足則標註。
+
+Social History:
+Smoking: 資料不足則標註
+Alcohol: 資料不足則標註
+Betel nut: 資料不足則標註
+
+若為乳癌或婦科癌症，額外加入以下欄位，其他癌別完全省略：
+Gynecologic / Breast History:
+Menarche / Menopause / Parity / Hormone therapy / Prior surgery: 各項資料不足則標註
+
+Drug Allergy:
+資料不足則標註
+
+---
+## 理學檢查
+ECOG: 資料不足則標註
+Body weight: 資料不足則標註
+Physical Examination (日期): 只寫異常發現；若全部正常則寫 PE ok
+
+---
+## 癌指數
+指標名稱: 數值 (日期) -> 數值 (日期) -> ... 時序排列
+單筆則直接列出；若無資料則標註「資料不足」
+
+---
+## 病理檢查
+#類型(日期): 部位與術式 — 病理診斷，分化程度/分級。IHC: 陽性項目(+); 陰性項目(-)。特殊染色結果。重要備註。
+2-3句為上限；grossly描述、標本大小等細節省略。
+
+---
+## 影像檢查
+#影像類型(日期): 與主診斷直接相關的陽性發現及關鍵數據，1-3句。PET-CT格式：主病灶數據 -> 轉移部位簡述 -> 分期，控制在2-3句內。良性、退化、無關病灶一律略去。
+
+---
+## 治療計畫
+化療/標靶：列出每個 cycle 或每次給藥日期、藥物、劑量
+放療：劑量、分次、照射部位、開始日期
+手術、荷爾蒙等：依時序列出
+若無資料則標註
+
+---
+## AI 建議參考（非病歷內容，僅供醫師參考）
+以下為 AI 根據上述資料結合放射腫瘤科臨床慣例所提出之建議，不代表實際醫囑，最終決策請由主治醫師判斷。
+
+RT role: 根治性或姑息性 RT 建議，含劑量分割方式
+Systemic therapy: 化療、標靶、免疫、荷爾蒙建議
+Suggested workup: 尚缺的評估項目
+Supportive care: 營養、疼痛、口腔照護等
+Follow-up: 治療後追蹤建議
+
+---
+書寫規則：
+英文書寫，章節標題保留中文
+民國年自動轉換為西元年
+影像、病理各自獨立一行，以 #類型(日期): 開頭
+IHC 染色無論陰陽性一律完整列出
+Present Illness 以 2-3 句為限；診斷後才執行的治療省略不寫
+Past Medical History 只列疾病名稱，省略療程細節
+Physical Examination 只寫異常發現；若全部正常則寫 PE ok
+PET-CT 整理：主病灶數據 -> 轉移部位簡述 -> 分期，控制在 2-3 句
+修正明顯錯字，但不改變原意
+AI 建議區可中英混用，可引用醫學知識；病歷整理區寧可留空，不可猜測
+
+---
+輸入病歷資料：
+[貼上原始病摘、檢驗、病理、影像報告]`
+        };
+        function showPresetModal(){document.getElementById('presetPassword').value='';document.getElementById('presetModal').classList.add('show');document.getElementById('presetPassword').focus();}
+        function closePresetModal(){document.getElementById('presetModal').classList.remove('show');}
+        function loadPresetTemplate(){
+            const pwd=document.getElementById('presetPassword').value;
+            if(pwd!==PRESET_PASSWORD){showToast('密碼錯誤','error');return;}
+            data.promptTemplates[0]={name:PRESET_TEMPLATE.name,content:PRESET_TEMPLATE.content};
+            selectedTemplateIndex=0;
+            renderTemplateList();
+            document.getElementById('promptText').value=PRESET_TEMPLATE.content;
+            data.promptText=PRESET_TEMPLATE.content;
+            saveData();
+            closePresetModal();
+            showToast('已載入預設範本');
+        }
+        // ===== 預設範本功能結束 =====
+        
         function markDataChanged(){
             if(!dataChanged){
                 dataChanged=true;
@@ -599,8 +730,23 @@
         
         function updateDataFromUI(){data.promptText=document.getElementById('promptText').value;data.includePrompt=document.getElementById('includePrompt').checked;data.patientName=document.getElementById('patientName').value;data.patientAge=document.getElementById('patientAge').value;data.patientMRN=document.getElementById('patientMRN').value;data.ecog=document.getElementById('ecog').value;data.cfs=document.getElementById('cfs').value;data.medicalSummary=document.getElementById('summaryText').value;data.labData=document.getElementById('labText').value;data.previewText=document.getElementById('previewText').value;}
         function applyDataToUI(){document.getElementById('promptText').value=data.promptTemplates[selectedTemplateIndex]?.content||'';document.getElementById('includePrompt').checked=data.includePrompt;document.getElementById('patientName').value=data.patientName;document.getElementById('patientAge').value=data.patientAge||'';document.getElementById('patientMRN').value=data.patientMRN;document.getElementById('ecog').value=data.ecog;document.getElementById('cfs').value=data.cfs;document.getElementById('summaryText').value=data.medicalSummary;document.getElementById('labText').value=data.labData;document.getElementById('previewText').value=data.previewText;updatePatientInfoBar();}
-        function saveData(){updateDataFromUI();localStorage.setItem('chart_v6102',JSON.stringify(data));}
-        function loadData(){const s=localStorage.getItem('chart_v6102');if(s)try{data={...data,...JSON.parse(s)};}catch(e){}}
+        function saveData(){updateDataFromUI();localStorage.setItem('chart_data',JSON.stringify(data));}
+        function loadData(){
+            // 嘗試讀取新 key
+            let s=localStorage.getItem('chart_data');
+            // 如果沒有，嘗試從舊版本遷移
+            if(!s){
+                const oldKeys=['chart_v6103','chart_v6102','chart_v6101','chart_v6100','chart_v693','chart_v692','chart_v691','chart_v690','chart_v681','chart_v680','chart_v673'];
+                for(const k of oldKeys){
+                    s=localStorage.getItem(k);
+                    if(s){
+                        localStorage.setItem('chart_data',s); // 遷移到新 key
+                        break;
+                    }
+                }
+            }
+            if(s)try{data={...data,...JSON.parse(s)};}catch(e){}
+        }
         function clearField(id){document.getElementById(id).value='';saveData();markDataChanged();showToast('已清除');}
         function clearPatientTab(){['patientName','patientMRN','patientAge'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');document.getElementById('maskInfo').checked=false;saveData();markDataChanged();updatePatientInfoBar();showToast('已清除');}
         function clearAll(){if(!confirm('清除所有資料？（保留範本）'))return;const t=data.promptTemplates;data={promptText:'',includePrompt:true,promptTemplates:t,patientName:'',patientAge:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',tumorMarkers:[],pathology:[],imaging:[],previewText:''};applyDataToUI();renderMarkerTable();renderPathologyTable();renderImagingTable();saveData();dataChanged=false;document.getElementById('previewNotice').className='preview-notice';document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>按「產生預覽」整合各頁資料';updatePatientInfoBar();showToast('已清除');}
@@ -611,12 +757,19 @@
             const age=document.getElementById('patientAge').value.trim();
             const bar=document.getElementById('patientInfoBar');
             if(!name&&!mrn&&!age){bar.classList.remove('show');return;}
+            const copyIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
             let html=[];
-            if(mrn)html.push(`<span class="info-item"><span class="info-label">病歷號：</span><span class="info-value">${mrn}</span></span>`);
-            if(name)html.push(`<span class="info-item"><span class="info-label">姓名：</span><span class="info-value">${name}</span></span>`);
+            if(mrn)html.push(`<span class="info-item"><span class="info-label">病歷號：</span><span class="info-value">${mrn}</span><button class="copy-btn" onclick="copyInfoValue('${mrn}')" title="複製">${copyIcon}</button></span>`);
+            if(name)html.push(`<span class="info-item"><span class="info-label">姓名：</span><span class="info-value">${name}</span><button class="copy-btn" onclick="copyInfoValue('${name}')" title="複製">${copyIcon}</button></span>`);
             if(age)html.push(`<span class="info-item"><span class="info-label">年齡：</span><span class="info-value">${age} 歲</span></span>`);
             bar.innerHTML=html.join('');
             bar.classList.add('show');
+        }
+        function copyInfoValue(val){
+            if(navigator.clipboard&&navigator.clipboard.writeText){
+                navigator.clipboard.writeText(val).then(()=>showToast('已複製')).catch(()=>fallbackCopy(val));
+            }else{fallbackCopy(val);}
+            function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showToast('已複製');}catch(e){showToast('複製失敗','error');}document.body.removeChild(ta);}
         }
         
         function getMaskedInfo(){let n=data.patientName,m=data.patientMRN;if(n.length>2)n=n[0]+'○'.repeat(n.length-2)+n[n.length-1];else if(n.length===2)n=n[0]+'○';if(m.length>4){const mid=Math.floor(m.length/2);m=m.substring(0,mid-1)+'**'+m.substring(mid+1);}else if(m.length>0)m=m[0]+'**';return{name:n,mrn:m};}
@@ -664,14 +817,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.10.2</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.11.0</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.10.2</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.11.0</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
