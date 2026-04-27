@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.10.4</title>
+    <title>病歷整理器 V6.12.2</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +151,7 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.10.4</h1>
+                    <h1>病歷整理器 V6.12.2</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -188,13 +188,14 @@
                     </div>
                 </div>
                 <div class="template-section">
-                    <div class="template-header">
+                    <div class="template-header" style="flex-wrap:wrap;">
                         <h4>範本清單</h4>
-                        <div class="btn-group">
+                        <div class="btn-group" style="flex-wrap:nowrap;">
                             <button class="btn btn-outline" id="btnEditTemplate" onclick="enableEditMode()"><svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>編輯</button>
                             <button class="btn btn-primary" id="btnSaveTemplate" onclick="saveTemplateContent()" style="display:none;"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
                             <button class="btn btn-outline" id="btnCancelEdit" onclick="cancelEditMode()" style="display:none;"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
                             <button class="btn btn-outline" onclick="showRenamePanel()"><svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>命名</button>
+                            <button class="btn btn-accent" onclick="showPresetModal()"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>預設</button>
                         </div>
                     </div>
                     <div class="rename-panel" id="renamePanel">
@@ -392,6 +393,42 @@
         </div>
     </div>
     
+    <div class="modal-overlay" id="presetModal">
+        <div class="modal" style="max-width:380px;">
+            <h3><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>載入預設範本</h3>
+            <div class="form-group">
+                <label>選擇預設</label>
+                <select id="presetSelect">
+                    <option value="0">放腫病歷整理</option>
+                    <option value="1">多專科會議 JSON</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>載入至</label>
+                <select id="presetTarget">
+                    <option value="0">範本 1</option>
+                    <option value="1">範本 2</option>
+                    <option value="2">範本 3</option>
+                    <option value="3">範本 4</option>
+                    <option value="4">範本 5</option>
+                    <option value="5">範本 6</option>
+                    <option value="6">範本 7</option>
+                    <option value="7">範本 8</option>
+                    <option value="8">範本 9</option>
+                    <option value="9">範本 10</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>請輸入密碼</label>
+                <input type="password" id="presetPassword" placeholder="密碼..." onkeypress="if(event.key==='Enter')loadPresetTemplate()">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closePresetModal()">取消</button>
+                <button class="btn btn-primary" onclick="loadPresetTemplate()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>確定</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // ===== 授權驗證（目前停用）=====
         const ENABLE_DOMAIN_PROTECTION = false; // 設為 true 啟用網域保護
@@ -520,6 +557,156 @@
         }
         function clearAiResult(){document.getElementById('aiResultText').value='';showToast('已清除');}
         // ===== AI 設定結束 =====
+        
+        // ===== 預設範本功能 =====
+        const PRESET_PASSWORD = 'Sela1227';
+        const PRESET_TEMPLATES = [
+            {
+                name: '放腫病歷整理',
+                content: `Prompt：放射腫瘤科病歷整理
+
+你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成結構化的臨床摘要。
+
+核心原則（最高優先）：
+1. 只能使用貼上的資料，絕對不可自行推斷、補充、或引用任何外部醫學知識與記憶
+2. 資料不足時，直接標註「資料不足」，不可猜測或填入看似合理的內容
+3. 良性、退化性、偶發性無關病灶不需提及，只保留與主診斷相關的陽性發現
+
+---
+
+輸出格式：
+
+## 診斷
+一句話診斷，包含：腫瘤部位、病理類型、分化程度、(口咽癌要有 p16狀態、乳癌要有ER/PR/HER2/KI67)、TNM分期、Margin、主要淋巴結情況、治療意圖。僅使用原始資料中明確記載的資訊。
+
+---
+## 病史
+
+Present Illness:
+2-3句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。診斷後才執行的治療省略不寫。
+
+Past Medical History:
+只列疾病或手術名稱，省略療程細節與短期病程變化。資料不足則標註，有寫 nil 即有問，標示 Nil。若有記錄 DM(-)/HTN(-) 等陰性項目，代表有問過，應保留記錄。
+
+Family History:
+資料不足則標註，有寫 nil 即有問，標示 Nil。
+
+Social History:
+Smoking: 資料不足則標註 / Alcohol: 資料不足則標註 / Betel nut: 資料不足則標註
+
+若為乳癌或婦科癌症，額外加入：
+Gynecologic / Breast History:
+Menarche / Menopause / Parity / Hormone therapy / Prior surgery: 各項資料不足則標註；其他癌別完全省略此欄。
+
+Drug Allergy:
+資料不足則標註，有寫 nil 即有問，標示 Nil。
+
+---
+## 理學檢查
+ECOG: 資料不足則標註
+Body weight: 資料不足則標註
+Physical Examination (日期): 只寫異常發現；若全部正常則寫 PE ok
+
+---
+## 癌指數
+指標名稱: 數值 (日期) -> 數值 (日期) -> ... 時序排列
+單筆則直接列出；若無資料則標註「資料不足」，不同癌指數要分段
+
+---
+## 病理檢查
+#類型(日期): 部位與術式 — 病理診斷，分化程度/分級。腫瘤大小、Margin、ALI、PNI、ECE。
+IHC: 有百分比者直接寫 ER(99%)/PR(85%)，無百分比者寫 HER2(+)/Ki67(-)。特殊染色結果。重要備註。
+2-3句為上限；grossly描述、標本大小等細節省略。
+
+---
+## 影像檢查
+#影像類型(日期): 與主診斷直接相關的陽性發現及關鍵數據，1-3句。
+PET-CT格式：主病灶數據 (SUV 變化) -> 轉移部位簡述 -> 分期，控制在2-3句內。
+良性、退化、無關病灶一律略去。
+
+---
+## 治療計畫
+化療/標靶：列出每個 cycle 或每次給藥日期、藥物、劑量
+放療：劑量、分次、照射部位、開始日期
+手術、荷爾蒙等：依時序列出
+若無資料則標註
+
+---
+## AI 建議參考（非病歷內容，僅供醫師參考）
+以下為 AI 根據上述資料結合放射腫瘤科臨床慣例所提出之建議，不代表實際醫囑，最終決策請由主治醫師判斷。如果處置不符合現行醫學亦要誠實建議。
+
+RT role: 根治性或姑息性 RT 建議，含劑量分割方式
+Systemic therapy: 化療、標靶、免疫、荷爾蒙建議
+Suggested workup: 尚缺的評估項目
+Supportive care: 營養、疼痛、口腔照護等
+Follow-up: 治療後追蹤建議
+
+---
+書寫規則：
+英文書寫，章節標題保留中文
+民國年自動轉換為西元年
+影像、病理各自獨立一行，以 #類型(日期): 開頭
+IHC 有百分比者省略+號，直接寫 ER(99%)；無百分比者保留+/-號
+Past Medical History 若有記錄陰性項目如 DM(-)/HTN(-)，代表有問過，應保留
+Present Illness 以 2-3 句為限；診斷後才執行的治療省略不寫
+Past Medical History 只列疾病名稱，省略療程細節
+Physical Examination 只寫異常發現；若全部正常則寫 PE ok
+PET-CT 整理：主病灶數據 -> 轉移部位簡述 -> 分期，控制在 2-3 句
+修正明顯錯字，但不改變原意
+AI 建議區可中英混用，可引用醫學知識；病歷整理區寧可留空，不可猜測
+
+---
+輸入病歷資料：
+[貼上原始病摘、檢驗、病理、影像報告]`
+            },
+            {
+                name: '多專科會議 JSON',
+                content: `你是 MDT 會議系統的資料轉換助理。請將以下病人臨床資料轉換成 JSON 格式，嚴格按照欄位定義輸出，只輸出 JSON 陣列（即使只有一筆也用陣列），不要加任何說明文字或 markdown 符號。
+【重要限制】只能使用貼上的資料，絕對不可自行推斷、補充、或引用任何外部醫學知識與記憶。資料中沒有的欄位一律留空字串或空陣列。
+欄位定義：
+_cancer：癌別名稱，從以下選填（必填）：「頭頸癌」「血液淋巴癌」「胸腔癌」「乳癌」「消化道癌」「肝膽胰癌」「泌尿道癌」「婦癌」
+chartNo：病歷號（字串）
+name：姓名（原文，系統顯示時自動遮蔽中間字）
+age：年齡（字串）
+gender："M" 或 "F"
+diagnosis：完整診斷（含分期）
+cc：現病史（Present Illness）
+ph：過去病史（Past History），若無請填 "Nil"
+phChips：慢性病陣列，從以下選填：["HTN","DM","CAD","CVA","HBV","HCV","CKD","COPD"]，無則空陣列
+pathologies：病理，陣列，每筆 {"date":"YYYY-MM-DD","content":"..."}
+  - IHC 結果（ER/PR/HER2/Ki-67 等）放在 content 裡，不要放 markers
+exams：影像檢查，陣列，每筆 {"name":"CT/MRI/Bone scan/SONO/Breast SONO/PET-CT/X-Ray/Echo/Endoscopy/Lab...","date":"YYYY-MM-DD","content":"..."}
+  - 若檢查類型不在上述清單，name 填實際名稱
+treatments：治療，陣列，每筆 {"name":"藥物/手術名稱","date":"YYYY-MM-DD","content":"劑量/說明"}
+markers：癌指數（PSA/CEA/CA125/AFP/CA19-9/CA15-3 等），陣列，每筆：
+  {"name":"CEA","date":"最早一筆的日期YYYY-MM-DD","content":"值(日期)→值(日期)，如：5.2(2025-01-10)→8.7(2025-04-15)"}
+  - content 不重複指數名稱；若僅一次檢驗則 content 只填 值(日期)
+familyHistory：家族癌症史，自由文字；僅 _cancer 為「乳癌」或「婦癌」時填寫，其他癌別填空字串 ""
+mammo：乳房攝影，僅 _cancer 為「乳癌」時填寫，格式：{"date":"YYYY-MM-DD","report":"Findings:...
+Impression:...","images":[]}；其他癌別省略此欄位
+discussion：討論要點，一句話摘要本次討論重點
+topics：討論議題，從以下選填一或多項：["影像討論","病理討論","分期討論","治療策略討論"]
+以下是病人資料：`
+            }
+        ];
+        function showPresetModal(){document.getElementById('presetPassword').value='';document.getElementById('presetSelect').value='0';document.getElementById('presetTarget').value='0';document.getElementById('presetModal').classList.add('show');document.getElementById('presetPassword').focus();}
+        function closePresetModal(){document.getElementById('presetModal').classList.remove('show');}
+        function loadPresetTemplate(){
+            const pwd=document.getElementById('presetPassword').value;
+            if(pwd!==PRESET_PASSWORD){showToast('密碼錯誤','error');return;}
+            const idx=parseInt(document.getElementById('presetSelect').value);
+            const targetIdx=parseInt(document.getElementById('presetTarget').value);
+            const preset=PRESET_TEMPLATES[idx];
+            data.promptTemplates[targetIdx]={name:preset.name,content:preset.content};
+            selectedTemplateIndex=targetIdx;
+            renderTemplateList();
+            document.getElementById('promptText').value=preset.content;
+            data.promptText=preset.content;
+            saveData();
+            closePresetModal();
+            showToast('已載入「'+preset.name+'」至範本 '+(targetIdx+1));
+        }
+        // ===== 預設範本功能結束 =====
         
         function markDataChanged(){
             if(!dataChanged){
@@ -689,14 +876,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.10.4</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.12.2</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.10.4</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.12.2</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
