@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.12.2</title>
+    <title>病歷整理器 V6.13.0</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +151,7 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.12.2</h1>
+                    <h1>病歷整理器 V6.13.0</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -214,6 +214,7 @@
         </div>
         
         <div class="tab-content" id="tab-patient">
+            <div class="checkbox-group" style="margin-bottom:10px;"><input type="checkbox" id="maskInfo" checked><label for="maskInfo">遮蔽姓名</label></div>
             <div class="helper-text"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>病歷號/姓名會自動加入檔名，年齡選填</div>
             <div class="form-group" style="max-width:300px;"><label>病歷號</label><input type="text" id="patientMRN" placeholder="病歷號" onchange="markDataChanged()" oninput="updatePatientInfoBar()"></div>
             <div class="form-row">
@@ -224,7 +225,6 @@
                 <div class="form-group" style="width:140px;"><label>ECOG</label><select id="ecog" onchange="markDataChanged()"><option value="">不填</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
                 <div class="form-group" style="flex:1;max-width:240px;"><label>衰弱量表</label><select id="cfs" onchange="markDataChanged()"><option value="">不填</option><option value="1">1：非常健壯</option><option value="2">2：健康良好</option><option value="3">3：日常可自理</option><option value="4">4：脆弱但尚可自理</option><option value="5">5：輕度衰弱</option><option value="6">6：中度衰弱</option><option value="7">7：重度衰弱</option><option value="8">8：極重度衰弱</option><option value="9">9：末期病人</option></select></div>
             </div>
-            <div class="checkbox-group"><input type="checkbox" id="maskInfo"><label for="maskInfo">遮蔽姓名</label></div>
             <button class="btn btn-outline" onclick="clearPatientTab()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
         </div>
         
@@ -350,17 +350,6 @@
             <div class="form-group"><label>AI 整理結果</label><textarea id="aiResultText" placeholder="AI 整理後的內容會顯示在這裡..." readonly></textarea></div>
         </div>
         
-        <div class="bottom-bar">
-            <div class="btn-group">
-                <button class="btn btn-primary" onclick="saveData()"><svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>暫存</button>
-                <button class="btn btn-outline" onclick="clearAll()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-outline" onclick="exportTXT()"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>TXT</button>
-                <button class="btn btn-outline" onclick="exportHTML()"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>HTML</button>
-                <button class="btn btn-accent" onclick="exportPDF()"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
-            </div>
-        </div>
     </div>
     
     <div class="toast" id="toast"></div>
@@ -401,6 +390,7 @@
                 <select id="presetSelect">
                     <option value="0">放腫病歷整理</option>
                     <option value="1">多專科會議 JSON</option>
+                    <option value="2">影像規範</option>
                 </select>
             </div>
             <div class="form-group">
@@ -687,6 +677,239 @@ Impression:...","images":[]}；其他癌別省略此欄位
 discussion：討論要點，一句話摘要本次討論重點
 topics：討論議題，從以下選填一或多項：["影像討論","病理討論","分期討論","治療策略討論"]
 以下是病人資料：`
+            },
+            {
+                name: '影像規範',
+                content: `Oncology Imaging Report Summarization Guideline
+（放腫/腫瘤影像摘要標準）
+
+一、核心總原則（所有影像共通）
+
+目標：
+門診病歷可直接貼上、MDT/tumor board 可直接使用、oncology-oriented、radiology concise style、不要教科書式 narrative
+
+核心風格：
+必須：簡潔、腫瘤導向、positive finding 優先、同器官整合、高資訊密度、實戰病歷風格
+禁止：過度推論、自行增加 diagnosis、冗長正常描述、clinical correlation 廢話、copy-paste 原文、長篇 narrative
+
+病灶排序規則（固定優先順序）：
+1. Primary tumor
+2. Recurrence
+3. Metastasis
+4. Lymphadenopathy
+5. Bone lesions
+6. Treatment-related changes
+7. Benign/incidental findings
+8. Normal findings（通常省略）
+
+病灶描述固定順序：
+Location -> Size -> Key feature -> Impression
+例如：Liver S8, 3 cm arterial enhancing lesion with washout, suspicious for HCC.
+
+同器官整合：
+不要：Liver lesion... Another liver lesion...
+改成：Liver: S5 and S8 arterial enhancing lesions, up to 3 cm.
+
+正常 findings 原則：
+大部分正常內容刪除。通常省略：spleen unremarkable、no ascites、no bowel obstruction、physiologic uptake、normal pancreas、no significant findings
+
+治療後變化必須保留：
+s/p lobectomy、post-RFA change、post-CCRT change、post-op fibrosis、post vertebroplasty
+
+用字統一規則：
+suspicious for -> suspicious、compatible with -> compatible with、suggestive of -> suggestive of、likely due to -> likely、cannot be ruled out -> cannot exclude
+
+distant metastasis 統一：
+No distant mets.（不要：No evidence of distant metastatic disease involving...）
+
+禁止冗詞：
+Recommend clinical correlation、Continued imaging follow-up、Please correlate clinically、For details please see description、no significant interval change、Report Source、Reported by
+
+---
+二、Final Summary Rule（最高優先級）
+
+所有影像檢查最後一定要有：Summary 或 Summary for Medical Record
+
+Summary 規格：
+單行、不分段、超高濃縮、門診病歷可直接貼上、保留最重要 malignancy-related findings、不寫廢話、不寫完整 narrative sentence、不重複前面 Findings
+
+Summary 描述順序（固定）：
+主要病灶 -> LN -> mets -> treatment change -> category/staging
+
+Summary 用字風格：
+使用縮寫：w/、bil.、LN(+)、mets、post-op、post-CCRT、suspicious、hypo/hyper
+
+Summary 禁止內容：
+complete sentences、recommend follow-up、correlate clinically、detailed explanation、there is、noted、identified
+
+---
+三、CT / MRI 專用規則
+
+標題：Imaging Report Summary
+
+Findings 排序：
+1. suspicious malignancy
+2. LN
+3. metastasis
+4. post-treatment change
+5. important incidental findings
+
+MRI 特殊資訊保留：
+diffusion restriction、T1 hypointense、T2 hyperintense、enhancement、washout、perifocal edema
+
+Bone lesion 格式：
+T8-T12 mixed sclerotic/lytic lesions, compatible with bone metastases.
+
+LN 格式：
+Left paraaortic LN, 10 mm, suspicious for metastasis.
+
+Staging（若原文有）：
+必須保留：cT、cN、cM、AJCC 8th edition
+例如：Imaging staging: pancreatic cancer cT4N2M1.
+
+CT/MRI Summary 範例：
+Summary for Medical Record
+RUL 2.3 cm spiculated mass w/ mediastinal LN enlargement and bilateral pulmonary nodules, suspicious lung ca w/ lung mets.
+
+---
+四、PET/CT 專用規則
+
+PET 核心：「FDG 異常地圖」
+
+PET 病灶格式（固定）：
+Organ: location, size, FDG: SUVmax A -> B
+例如：Tongue: left border, 1.3 cm, FDG: SUVmax 5.5 -> 7.0
+
+PET 分類固定：
+1. Head and Neck
+2. Chest
+3. Abdomen and Pelvis
+4. Musculoskeletal
+
+多發病灶整合：
+Bones: T5, T9-11, L1, sacrum, FDG: SUVmax 8.3 -> 11.8
+
+PET 省略原則：
+physiologic FDG uptake、others negative、no significant abnormality、clinical correlation recommended
+
+Impression 保留內容：
+1. primary malignancy
+2. LN metastasis
+3. distant metastasis
+4. recurrence
+5. inflammatory vs metastasis DDx
+
+PET Summary 範例：
+Summary for Medical Record
+Left breast hypermetabolic lesion w/ left axillary/internal mammary LNs, FDG-avid liver and bone mets, cT2N3M1.
+
+---
+五、Bone Scan 專用規則
+
+Bone scan 核心：「只留異常 uptake」，Procedure 全刪。
+
+Score 必須保留：
+Suspicious for bone metastasis (Score 4)
+
+Bone Scan 排序：
+1. bone metastasis
+2. degenerative change
+3. inflammatory change
+4. incidental finding
+
+Bone lesion 格式：
+location + score + interpretation
+例如：Right acetabulum MDP-avid lesion (Score 4), suspicious for metastasis.
+
+Bone Scan Summary 範例：
+Summary for Medical Record
+MDP-avid lesions at right acetabulum and L1 (Score 4), suspicious for bone mets.
+
+---
+六、Breast Ultrasound 專用規則
+
+乳超核心：「位置導向」
+
+位置格式固定：
+R/11'/2 cm、L/3'/1 cm
+
+病灶順序固定：
+size -> shape -> margin -> echo -> calcification -> vascularity
+
+LN 規則：
+LN 放最前面。例如：LN(+) Left Axillary
+
+不寫正常描述：
+no duct dilatation、nil、no posterior echo、no calcification、no hypervascularity
+
+Summary 風格（極短病歷風）：
+R/11'/2 cm irregular hypoechoic mass w/ vascularity, LN(+) L axilla, BIRADS 5.
+
+---
+七、Mammography 專用規則
+
+Mammography 核心：「篩檢摘要」
+
+排序固定：
+1. density
+2. mass
+3. calcification
+4. asymmetry/distortion
+5. LN
+6. BI-RADS
+7. recommendation
+
+Density 統一：
+ACR-A -> fatty、ACR-B -> scattered fibroglandular density、ACR-C -> heterogeneously dense、ACR-D -> extremely dense
+
+BI-RADS 統一：BI-RADS X
+
+Recommendation 簡化：
+Suggest breast ultrasound correlation.
+
+Mammography Summary 範例：
+Summary
+Right upper axillary focal asymmetry w/ suspicious right axillary LNs, BI-RADS 0.
+
+---
+八、Abdominal Ultrasound 專用規則
+
+腹超核心：「器官分類 + 只留異常」
+
+器官固定順序：
+1. Liver
+2. Gallbladder
+3. Pancreas
+4. Kidneys
+5. Spleen
+6. Urinary bladder
+7. Other
+
+Liver segment 保留：S7、S8
+
+cyst 原則：
+小單純 cyst 通常省略。保留情況：多顆、complicated、需要追蹤、differential diagnosis relevant
+
+必須保留：
+hydronephrosis、ascites、pleural effusion、stone、sludge、mass
+
+Abdominal US Summary 範例：
+Summary for Medical Record
+Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hydronephrosis.
+
+---
+風格核心：
+
+本質：「Oncology-oriented compressed reporting」
+
+真正核心不是「摘要」，而是「重新排序資訊優先度」
+
+風格特點：
+刪掉正常資訊、重排病灶順序、保留 staging、保留治療相關變化、強化 malignant findings、壓縮成門診語言、最後加 clinician one-line summary
+
+---
+輸入影像報告：
+[貼上原始影像報告]`
             }
         ];
         function showPresetModal(){document.getElementById('presetPassword').value='';document.getElementById('presetSelect').value='0';document.getElementById('presetTarget').value='0';document.getElementById('presetModal').classList.add('show');document.getElementById('presetPassword').focus();}
@@ -807,7 +1030,7 @@ topics：討論議題，從以下選填一或多項：["影像討論","病理討
             if(s)try{data={...data,...JSON.parse(s)};}catch(e){}
         }
         function clearField(id){document.getElementById(id).value='';saveData();markDataChanged();showToast('已清除');}
-        function clearPatientTab(){['patientName','patientMRN','patientAge'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');document.getElementById('maskInfo').checked=false;saveData();markDataChanged();updatePatientInfoBar();showToast('已清除');}
+        function clearPatientTab(){['patientName','patientMRN','patientAge'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');saveData();markDataChanged();updatePatientInfoBar();showToast('已清除');}
         function clearAll(){if(!confirm('清除所有資料？（保留範本）'))return;const t=data.promptTemplates;data={promptText:'',includePrompt:true,promptTemplates:t,patientName:'',patientAge:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',tumorMarkers:[],pathology:[],imaging:[],previewText:''};applyDataToUI();renderMarkerTable();renderPathologyTable();renderImagingTable();saveData();dataChanged=false;document.getElementById('previewNotice').className='preview-notice';document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>按「產生預覽」整合各頁資料';updatePatientInfoBar();showToast('已清除');}
         
         function updatePatientInfoBar(){
@@ -876,14 +1099,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.12.2</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.13.0</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.12.2</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.13.0</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
