@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.13.1</title>
+    <title>病歷整理器 V6.13.2</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +151,7 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.13.1</h1>
+                    <h1>病歷整理器 V6.13.2</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -162,6 +162,7 @@
         </div>
         
         <div class="tabs">
+            <button class="btn btn-outline" onclick="clearAll()" style="color:var(--danger);border-color:var(--danger);padding:5px 8px;margin-right:8px;" title="清除全部資料"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>重填</button>
             <button class="tab-btn active" data-tab="prompt"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Prompt</button>
             <button class="tab-btn" data-tab="patient"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>病人</button>
             <button class="tab-btn" data-tab="summary"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>病摘</button>
@@ -175,9 +176,6 @@
         <div class="patient-info-bar" id="patientInfoBar"></div>
         
         <div class="tab-content active" id="tab-prompt">
-            <div style="margin-bottom:10px;">
-                <button class="btn btn-outline" onclick="clearAll()" style="color:var(--danger);border-color:var(--danger);"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除全部（重新填寫）</button>
-            </div>
             <div class="two-col">
                 <div>
                     <div class="checkbox-group">
@@ -296,6 +294,7 @@
                         <div class="category-group">
                             <label><input type="checkbox" id="pathCatBiopsy" checked> Biopsy</label>
                             <label><input type="checkbox" id="pathCatPathology"> Pathology</label>
+                            <label><input type="checkbox" id="pathCatMolecular"> 分子檢測</label>
                         </div>
                         <button class="btn btn-success" onclick="savePathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
                         <button class="btn btn-outline" onclick="cancelPathologyEdit()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
@@ -327,7 +326,7 @@
                 <div class="date-error-msg" id="imagingDateError">日期格式錯誤，請輸入正確日期</div>
                 <textarea id="imagingContent" rows="4" placeholder="報告內容..." style="margin-top:6px;"></textarea>
             </div>
-            <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:85px;">種類</th><th style="width:60px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
+            <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:90px;">種類</th><th>內容預覽</th><th style="width:60px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
         </div>
         
         <div class="tab-content" id="tab-preview">
@@ -996,13 +995,13 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
         function clearAllMarkers(){if(!data.tumorMarkers.length)return;if(confirm('確定清空？')){data.tumorMarkers=[];renderMarkerTable();saveData();markDataChanged();showToast('已清空');}}
 
         function renderPathologyTable(){const tb=document.getElementById('pathologyTableBody');data.pathology.sort((a,b)=>a.date.localeCompare(b.date));if(!data.pathology.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.pathology.map((p,i)=>`<tr><td>${p.date}</td><td>${p.category||'Biopsy'}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startPathologyEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deletePathology(${i})">${icons.trash}</button></td></tr>`).join('');}
-        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');document.getElementById('pathologyDateError').classList.remove('show');document.getElementById('pathologyDate').classList.remove('error');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;}document.getElementById('pathologyDate').focus();}
-        function savePathology(){const dateEl=document.getElementById('pathologyDate');const d=dateEl.value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked;if(!d||!t)return showToast('日期與內容必填','error');if(!catB&&!catP)return showToast('請選擇分類','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();markDataChanged();showToast('已儲存');}
+        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');document.getElementById('pathologyDateError').classList.remove('show');document.getElementById('pathologyDate').classList.remove('error');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');document.getElementById('pathCatMolecular').checked=cats.includes('分子檢測');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;document.getElementById('pathCatMolecular').checked=false;}document.getElementById('pathologyDate').focus();}
+        function savePathology(){const dateEl=document.getElementById('pathologyDate');const d=dateEl.value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked,catM=document.getElementById('pathCatMolecular').checked;if(!d||!t)return showToast('日期與內容必填','error');if(!catB&&!catP&&!catM)return showToast('請選擇分類','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');if(catM)cats.push('分子檢測');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();markDataChanged();showToast('已儲存');}
         function cancelPathologyEdit(){document.getElementById('pathologyEditor').classList.remove('active');pathologyEditIndex=null;}
         function deletePathology(i){if(confirm('確定刪除？')){data.pathology.splice(i,1);renderPathologyTable();saveData();markDataChanged();showToast('已刪除');}}
         function clearAllPathology(){if(!data.pathology.length)return;if(confirm('確定清空？')){data.pathology=[];renderPathologyTable();saveData();markDataChanged();showToast('已清空');}}
         
-        function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
+        function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
         function startImagingEdit(i){imagingEditIndex=i;document.getElementById('imagingEditor').classList.add('active');document.getElementById('imagingDateError').classList.remove('show');document.getElementById('imagingDate').classList.remove('error');if(i!==null&&data.imaging[i]){document.getElementById('imagingType').value=data.imaging[i].type;document.getElementById('imagingDate').value=data.imaging[i].date;document.getElementById('imagingContent').value=data.imaging[i].text;}else{document.getElementById('imagingType').value='CT';document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';}document.getElementById('imagingDate').focus();}
         function saveImaging(){const dateEl=document.getElementById('imagingDate');const tp=document.getElementById('imagingType').value,d=dateEl.value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t)return showToast('所有欄位必填','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;cancelImagingEdit();renderImagingTable();saveData();markDataChanged();showToast('已儲存');}
         function cancelImagingEdit(){document.getElementById('imagingEditor').classList.remove('active');imagingEditIndex=null;}
@@ -1102,14 +1101,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.13.1</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.13.2</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.13.1</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.13.2</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
