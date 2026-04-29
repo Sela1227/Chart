@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.13.2</title>
+    <title>病歷整理器 V6.14.0</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +151,7 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.13.2</h1>
+                    <h1>病歷整理器 V6.14.0</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -215,7 +215,10 @@
         </div>
         
         <div class="tab-content" id="tab-patient">
-            <div class="checkbox-group" style="margin-bottom:10px;"><input type="checkbox" id="maskInfo" checked><label for="maskInfo">遮蔽姓名</label></div>
+            <div class="btn-group" style="margin-bottom:10px;">
+                <div class="checkbox-group" style="margin-bottom:0;"><input type="checkbox" id="maskInfo" checked><label for="maskInfo">遮蔽姓名</label></div>
+                <button class="btn btn-outline" onclick="clearPatientTab()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
+            </div>
             <div class="helper-text"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>病歷號/姓名會自動加入檔名，年齡選填</div>
             <div class="form-group" style="max-width:300px;"><label>病歷號</label><input type="text" id="patientMRN" placeholder="病歷號" onchange="markDataChanged()" oninput="updatePatientInfoBar()"></div>
             <div class="form-row">
@@ -226,12 +229,13 @@
                 <div class="form-group" style="width:140px;"><label>ECOG</label><select id="ecog" onchange="markDataChanged()"><option value="">不填</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
                 <div class="form-group" style="flex:1;max-width:240px;"><label>衰弱量表</label><select id="cfs" onchange="markDataChanged()"><option value="">不填</option><option value="1">1：非常健壯</option><option value="2">2：健康良好</option><option value="3">3：日常可自理</option><option value="4">4：脆弱但尚可自理</option><option value="5">5：輕度衰弱</option><option value="6">6：中度衰弱</option><option value="7">7：重度衰弱</option><option value="8">8：極重度衰弱</option><option value="9">9：末期病人</option></select></div>
             </div>
-            <button class="btn btn-outline" onclick="clearPatientTab()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
         </div>
         
         <div class="tab-content" id="tab-summary">
+            <div class="btn-group" style="margin-bottom:8px;">
+                <button class="btn btn-outline" onclick="clearField('summaryText')"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
+            </div>
             <div class="form-group"><label>病摘內容</label><textarea id="summaryText" rows="13" placeholder="輸入病摘..." onchange="markDataChanged()"></textarea></div>
-            <button class="btn btn-outline" onclick="clearField('summaryText')"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
         </div>
         
         <div class="tab-content" id="tab-lab">
@@ -243,7 +247,7 @@
                     <label style="font-weight:600;font-size:0.75rem;color:var(--text-primary);">腫瘤指數追蹤</label>
                     <div class="btn-group">
                         <button class="btn btn-primary" onclick="startMarkerEdit(null)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增</button>
-                        <button class="btn btn-outline" onclick="clearAllMarkers()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空</button>
+                        <button class="btn btn-outline" onclick="clearAllMarkers()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
                     </div>
                 </div>
                 <div class="editor-panel" id="markerEditor">
@@ -283,7 +287,7 @@
         <div class="tab-content" id="tab-pathology">
             <div class="btn-group" style="margin-bottom:8px;">
                 <button class="btn btn-primary" onclick="startPathologyEdit(null)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增</button>
-                <button class="btn btn-outline" onclick="clearAllPathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空</button>
+                <button class="btn btn-outline" onclick="clearAllPathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
             </div>
             <div class="editor-panel" id="pathologyEditor">
                 <div class="editor-header">
@@ -309,7 +313,7 @@
         <div class="tab-content" id="tab-imaging">
             <div class="btn-group" style="margin-bottom:8px;">
                 <button class="btn btn-primary" onclick="startImagingEdit(null)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增</button>
-                <button class="btn btn-outline" onclick="clearAllImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空</button>
+                <button class="btn btn-outline" onclick="clearAllImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
             </div>
             <div class="editor-panel" id="imagingEditor">
                 <div class="editor-header">
@@ -992,21 +996,21 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
         function saveMarkerDone(){const r=doSaveMarker();if(!r.ok){if(r.msg)showToast(r.msg,'error');return;}cancelMarkerEdit();showToast('已儲存');}
         function cancelMarkerEdit(){document.getElementById('markerEditor').classList.remove('active');markerEditIndex=null;}
         function deleteMarker(i){if(confirm('確定刪除？')){data.tumorMarkers.splice(i,1);renderMarkerTable();saveData();markDataChanged();showToast('已刪除');}}
-        function clearAllMarkers(){if(!data.tumorMarkers.length)return;if(confirm('確定清空？')){data.tumorMarkers=[];renderMarkerTable();saveData();markDataChanged();showToast('已清空');}}
+        function clearAllMarkers(){if(!data.tumorMarkers.length)return;if(confirm('確定清除？')){data.tumorMarkers=[];renderMarkerTable();saveData();markDataChanged();showToast('已清除');}}
 
         function renderPathologyTable(){const tb=document.getElementById('pathologyTableBody');data.pathology.sort((a,b)=>a.date.localeCompare(b.date));if(!data.pathology.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.pathology.map((p,i)=>`<tr><td>${p.date}</td><td>${p.category||'Biopsy'}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startPathologyEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deletePathology(${i})">${icons.trash}</button></td></tr>`).join('');}
         function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');document.getElementById('pathologyDateError').classList.remove('show');document.getElementById('pathologyDate').classList.remove('error');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');document.getElementById('pathCatMolecular').checked=cats.includes('分子檢測');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;document.getElementById('pathCatMolecular').checked=false;}document.getElementById('pathologyDate').focus();}
         function savePathology(){const dateEl=document.getElementById('pathologyDate');const d=dateEl.value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked,catM=document.getElementById('pathCatMolecular').checked;if(!d||!t)return showToast('日期與內容必填','error');if(!catB&&!catP&&!catM)return showToast('請選擇分類','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');if(catM)cats.push('分子檢測');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();markDataChanged();showToast('已儲存');}
         function cancelPathologyEdit(){document.getElementById('pathologyEditor').classList.remove('active');pathologyEditIndex=null;}
         function deletePathology(i){if(confirm('確定刪除？')){data.pathology.splice(i,1);renderPathologyTable();saveData();markDataChanged();showToast('已刪除');}}
-        function clearAllPathology(){if(!data.pathology.length)return;if(confirm('確定清空？')){data.pathology=[];renderPathologyTable();saveData();markDataChanged();showToast('已清空');}}
+        function clearAllPathology(){if(!data.pathology.length)return;if(confirm('確定清除？')){data.pathology=[];renderPathologyTable();saveData();markDataChanged();showToast('已清除');}}
         
         function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
         function startImagingEdit(i){imagingEditIndex=i;document.getElementById('imagingEditor').classList.add('active');document.getElementById('imagingDateError').classList.remove('show');document.getElementById('imagingDate').classList.remove('error');if(i!==null&&data.imaging[i]){document.getElementById('imagingType').value=data.imaging[i].type;document.getElementById('imagingDate').value=data.imaging[i].date;document.getElementById('imagingContent').value=data.imaging[i].text;}else{document.getElementById('imagingType').value='CT';document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';}document.getElementById('imagingDate').focus();}
         function saveImaging(){const dateEl=document.getElementById('imagingDate');const tp=document.getElementById('imagingType').value,d=dateEl.value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t)return showToast('所有欄位必填','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;cancelImagingEdit();renderImagingTable();saveData();markDataChanged();showToast('已儲存');}
         function cancelImagingEdit(){document.getElementById('imagingEditor').classList.remove('active');imagingEditIndex=null;}
         function deleteImaging(i){if(confirm('確定刪除？')){data.imaging.splice(i,1);renderImagingTable();saveData();markDataChanged();showToast('已刪除');}}
-        function clearAllImaging(){if(!data.imaging.length)return;if(confirm('確定清空？')){data.imaging=[];renderImagingTable();saveData();markDataChanged();showToast('已清空');}}
+        function clearAllImaging(){if(!data.imaging.length)return;if(confirm('確定清除？')){data.imaging=[];renderImagingTable();saveData();markDataChanged();showToast('已清除');}}
         
         function generatePreview(){updateDataFromUI();let p=[];if(data.includePrompt&&data.promptText.trim()){p.push(data.promptText.trim());p.push('─'.repeat(30));}const hp=data.patientName||data.patientAge||data.patientMRN||data.ecog||data.cfs;if(hp){p.push('【病人資料】');if(data.patientMRN)p.push(`病歷號：${data.patientMRN}`);if(data.patientName)p.push(`姓名：${data.patientName}`);if(data.patientAge)p.push(`年齡：${data.patientAge} 歲`);if(data.ecog)p.push(`ECOG: ${data.ecog}`);if(data.cfs)p.push(`衰弱量表: ${data.cfs}${FRAILTY_DESC[data.cfs]?`（${FRAILTY_DESC[data.cfs]}）`:''}`);p.push('─'.repeat(30));}if(data.medicalSummary.trim()){p.push('【病摘】');p.push(data.medicalSummary.trim());p.push('─'.repeat(30));}if(data.labData.trim()||data.tumorMarkers.length){p.push('【檢驗資料】');if(data.labData.trim())p.push(data.labData.trim());if(data.tumorMarkers.length){if(data.labData.trim())p.push('');p.push('腫瘤指數：');const grouped={};data.tumorMarkers.forEach(m=>{if(!grouped[m.type])grouped[m.type]=[];grouped[m.type].push(m);});Object.keys(grouped).sort().forEach(type=>{const items=grouped[type].sort((a,b)=>a.date.localeCompare(b.date));const vals=items.map(m=>`${m.date}: ${m.value}`).join(' → ');p.push(`  ${type}: ${vals}`);});}p.push('─'.repeat(30));}if(data.pathology.length){p.push('【病理報告】');data.pathology.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Category: ${x.category||'Biopsy'}`);p.push('Content:');p.push(x.text.trim());});p.push('─'.repeat(15));}if(data.imaging.length){p.push('【影像報告】');data.imaging.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Type: ${x.type}`);p.push('Content:');p.push(x.text.trim());});p.push('─'.repeat(15));}let result=p.join('\n').trim();result=result.replace(/\n{3,}/g,'\n\n');return result;}
         function refreshPreview(){let pv=generatePreview();const mk=document.getElementById('maskInfo').checked;if(mk&&data.patientName){const m=getMaskedInfo();pv=pv.replaceAll(data.patientName,m.name);}data.previewText=pv;document.getElementById('previewText').value=pv;dataChanged=false;document.getElementById('previewNotice').className='preview-notice';document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>預覽已更新';saveData();showToast('已產生預覽');}
@@ -1101,14 +1105,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.13.2</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.14.0</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.13.2</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.14.0</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
