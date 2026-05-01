@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.14.1</title>
+    <title>病歷整理器 V6.14.2</title>
     <link rel="icon" type="image/jpeg" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,7 +151,7 @@
             <div class="header-left">
                 <img src="logo.jpg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.14.1</h1>
+                    <h1>病歷整理器 V6.14.2</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -560,30 +560,51 @@
         const PRESET_TEMPLATES = [
             {
                 name: '放腫病歷整理',
-                content: `Prompt：放射腫瘤科病歷整理
+                content: `Prompt：放射腫瘤科病歷整理 v3（完整整合版）
 
 你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成結構化的臨床摘要。
 
-核心原則（最高優先）：
+================================================================
+核心原則（最高優先）
+================================================================
 1. 只能使用貼上的資料，絕對不可自行推斷、補充、或引用任何外部醫學知識與記憶
 2. 資料不足時，直接標註「資料不足」，不可猜測或填入看似合理的內容
 3. 良性、退化性、偶發性無關病灶不需提及，只保留與主診斷相關的陽性發現
+4. 病人腫瘤分子形態可能會隨時間改變，必須依時序分別記錄各次切片的分子分型，不可只用最終形態套用全程
 
----
-
-輸出格式：
+================================================================
+輸出格式
+================================================================
 
 ## 診斷
-一句話診斷，包含：腫瘤部位、病理類型、分化程度、(口咽癌要有 p16狀態、乳癌要有ER/PR/HER2/KI67)、TNM分期、Margin、主要淋巴結情況、治療意圖。僅使用原始資料中明確記載的資訊。
+一句話完整診斷，必須依時序整合以下要素：
+- 腫瘤部位與病理類型
+- 分化程度
+- 各次切片的分子形態（口咽癌要有 p16，乳癌每次都要列 ER/PR/HER2/Ki-67）
+- 各次 TNM 分期（含 cTNM、pTNM、ypTNM、yrcTNM）
+- Margin 狀態
+- 主要淋巴結情況
+- 已執行治療（含時間區間）
+- 治療意圖
+
+特別規則：
+- 若腫瘤分子形態有變化（例如 HR+ 轉 TNBC、HER2 狀態改變），診斷句必須能呈現演變過程
+- 已完成的治療要附上日期或時間區間（特別是 RT 必須有起訖日期及總劑量/分次）
+- 僅使用原始資料中明確記載的資訊
 
 ---
+
 ## 病史
 
 Present Illness:
-2-3句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。診斷後才執行的治療省略不寫。
+2-3 句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。
+診斷後才執行的治療省略不寫。
+若有 recurrence，要點出 recurrence 時間、形態變化、治療反應。
 
 Past Medical History:
-只列疾病或手術名稱，省略療程細節與短期病程變化。資料不足則標註，有寫 nil 即有問，標示 Nil。若有記錄 DM(-)/HTN(-) 等陰性項目，代表有問過，應保留記錄。
+只列疾病或手術名稱，省略療程細節與短期病程變化。
+資料不足則標註，有寫 nil 即有問，標示 Nil。
+若有記錄 DM(-)/HTN(-) 等陰性項目，代表有問過，應保留記錄。
 
 Family History:
 資料不足則標註，有寫 nil 即有問，標示 Nil。
@@ -593,67 +614,420 @@ Smoking: 資料不足則標註 / Alcohol: 資料不足則標註 / Betel nut: 資
 
 若為乳癌或婦科癌症，額外加入：
 Gynecologic / Breast History:
-Menarche / Menopause / Parity / Hormone therapy / Prior surgery: 各項資料不足則標註；其他癌別完全省略此欄。
+Menarche / Menopause / Parity / Hormone therapy / Prior surgery
+各項資料不足則標註；其他癌別完全省略此欄。
 
 Drug Allergy:
 資料不足則標註，有寫 nil 即有問，標示 Nil。
 
 ---
+
 ## 理學檢查
 ECOG: 資料不足則標註
 Body weight: 資料不足則標註
 Physical Examination (日期): 只寫異常發現；若全部正常則寫 PE ok
 
 ---
+
 ## 癌指數
 指標名稱: 數值 (日期) -> 數值 (日期) -> ... 時序排列
-單筆則直接列出；若無資料則標註「資料不足」，不同癌指數要分段
+單筆則直接列出；若無資料則標註「資料不足」
+不同癌指數要分段
 
 ---
-## 病理檢查
-#類型(日期): 部位與術式 — 病理診斷，分化程度/分級。腫瘤大小、Margin、ALI、PNI、ECE。
-IHC: 有百分比者直接寫 ER(99%)/PR(85%)，無百分比者寫 HER2(+)/Ki67(-)。特殊染色結果。重要備註。
-2-3句為上限；grossly描述、標本大小等細節省略。
+
+## 病理檢查（依時序排列，呈現分子形態演變）
+
+每次切片獨立一行，固定格式：
+#類型(日期): 部位與術式 — 病理診斷，分化程度/分級。腫瘤大小、Margin、LVI、PNI、ECE。Stage: pT_N_/ypT_N_。
+IHC: 該次切片的 ER/PR/HER2/Ki-67 完整列出，並判定該次的 subtype。
+特殊染色與 FISH 結果。重要備註。
+
+規則：
+- 每次切片都要寫出該次的 IHC，不可省略或共用
+- 有百分比者直接寫 ER(99%)/PR(85%)，無百分比者寫 HER2(+)/Ki67(-)
+- 每次都要在末尾標註該次的 subtype（例如：HR-low/HER2-low、TNBC、HER2-positive）
+- 開刀檢體必須附上該次的 pathologic stage
+- 2-3 句為上限；grossly 描述、標本大小等細節省略
+
+若分子形態有變化（乳癌、胃癌等），在病理檢查段落最後追加「分子形態演變總覽」表格：
+| 時間點 | ER | PR | HER2 | Ki-67 | Subtype |
+依時序填入各次切片資料。
 
 ---
+
 ## 影像檢查
-#影像類型(日期): 與主診斷直接相關的陽性發現及關鍵數據，1-3句。
-PET-CT格式：主病灶數據 (SUV 變化) -> 轉移部位簡述 -> 分期，控制在2-3句內。
+
+依下方「影像摘要規範」處理。
+每份報告獨立一行，以 #影像類型(日期): 開頭。
 良性、退化、無關病灶一律略去。
 
----
-## 治療計畫
-化療/標靶：列出每個 cycle 或每次給藥日期、藥物、劑量
-放療：劑量、分次、照射部位、開始日期
-手術、荷爾蒙等：依時序列出
-若無資料則標註
+================================================================
+影像摘要規範（Oncology Imaging Report Summarization）
+================================================================
 
----
-## AI 建議參考（非病歷內容，僅供醫師參考）
+【目標】
+輸出需符合：
+- 門診病歷可直接貼上
+- MDT / tumor board 可直接使用
+- oncology-oriented
+- radiology concise style
+- 不要教科書式 narrative
+
+【核心風格】
+必須：簡潔、腫瘤導向、positive finding 優先、同器官整合、高資訊密度、實戰病歷風格
+禁止：過度推論、自行增加 diagnosis、冗長正常描述、clinical correlation 廢話、copy-paste 原文、長篇 narrative
+
+【病灶排序規則】（固定優先順序）
+1. Primary tumor
+2. Recurrence
+3. Metastasis
+4. Lymphadenopathy
+5. Bone lesions
+6. Treatment-related changes
+7. Benign/incidental findings
+8. Normal findings（通常省略）
+
+【病灶描述固定順序】
+所有 modality 統一：Location -> Size -> Key feature -> Impression
+範例：Liver S8, 3 cm arterial enhancing lesion with washout, suspicious for HCC.
+不要寫：There is a 3 cm lesion in S8.
+
+【同器官整合】
+不要：Liver lesion... Another liver lesion...
+改成：Liver: S5 and S8 arterial enhancing lesions, up to 3 cm.
+
+【正常 findings 原則】
+大部分正常內容刪除。
+通常省略：spleen unremarkable / no ascites / no bowel obstruction / physiologic uptake / normal pancreas / no significant findings
+
+【治療後變化必須保留】
+例如：s/p lobectomy / post-RFA change / post-CCRT change / post-op fibrosis / post vertebroplasty
+
+【用字統一規則】
+- suspicious for -> suspicious
+- compatible with -> compatible with
+- suggestive of -> suggestive of
+- likely due to -> likely
+- cannot be ruled out -> cannot exclude
+
+【distant metastasis 統一】
+統一寫：No distant mets.
+不要：No evidence of distant metastatic disease involving...
+
+【禁止冗詞】
+通常刪除：
+- Recommend clinical correlation
+- Continued imaging follow-up
+- Please correlate clinically
+- For details please see description
+- no significant interval change
+- Report Source / Reported by
+
+【不混入舊資料】
+除非使用者要求 comparison：
+- 不得自行加入 previous imaging
+- 不得引用其他病人資料
+
+----------------------------------------------------------------
+影像 Final Summary Rule（最高優先級）
+----------------------------------------------------------------
+
+每份影像檢查最後一定要有：Summary 或 Summary for Medical Record
+
+【Summary 規格】
+- 單行
+- 不分段
+- 超高濃縮
+- 門診病歷可直接貼上
+- 保留最重要 malignancy-related findings
+- 不寫廢話
+- 不寫完整 narrative sentence
+- 不重複前面 Findings
+
+【Summary 核心風格】
+本質：「門診一句話版 Impression」，但比 Impression 更短、更實戰
+
+【Summary 必須保留】（依 modality 選擇）
+- CT/MRI: tumor / LN / mets / treatment change
+- PET: primary lesion / SUV / LN / mets
+- Bone scan: 最重要 bone lesion / Score
+- Breast ultrasound: 最大病灶 / LN / BIRADS
+- Mammography: asymmetry / mass / LN / BIRADS
+- Abdominal ultrasound: mass / stone / hydronephrosis / ascites
+
+【Summary 描述順序】（固定）
+主要病灶 -> LN -> mets -> treatment change -> category/staging
+
+【Summary 用字風格】
+使用縮寫：w/ / bil. / LN(+) / mets / post-op / post-CCRT / suspicious / hypo/hyper
+
+【Summary 禁止內容】
+禁止：complete sentences / recommend follow-up / correlate clinically / detailed explanation / there is / noted / identified
+
+----------------------------------------------------------------
+CT / MRI 專用規則
+----------------------------------------------------------------
+
+標題：Imaging Report Summary
+
+【Findings 排序】
+1. suspicious malignancy
+2. LN
+3. metastasis
+4. post-treatment change
+5. important incidental findings
+
+【MRI 特殊資訊保留】
+必須保留：diffusion restriction / T1 hypointense / T2 hyperintense / enhancement / washout / perifocal edema
+
+【Bone lesion 格式】
+範例：T8-T12 mixed sclerotic/lytic lesions, compatible with bone metastases.
+
+【LN 格式】
+範例：Left paraaortic LN, 10 mm, suspicious for metastasis.
+
+【Staging】
+若原文有，必須保留：cT / cN / cM / AJCC 8th edition
+範例：Imaging staging: pancreatic cancer cT4N2M1.
+
+【CT/MRI Summary 範例】
+Summary for Medical Record
+RUL 2.3 cm spiculated mass w/ mediastinal LN enlargement and bilateral pulmonary nodules, suspicious lung ca w/ lung mets.
+
+----------------------------------------------------------------
+PET/CT 專用規則
+----------------------------------------------------------------
+
+PET 核心：「FDG 異常地圖」
+
+【PET 病灶格式】（固定）
+Organ: location, size, FDG: SUVmax A -> B
+範例：Tongue: left border, 1.3 cm, FDG: SUVmax 5.5 -> 7.0
+
+【PET 分類固定】
+1. Head and Neck
+2. Chest
+3. Abdomen and Pelvis
+4. Musculoskeletal
+
+【多發病灶整合】
+範例：Bones: T5, T9-11, L1, sacrum, FDG: SUVmax 8.3 -> 11.8
+
+【PET 省略原則】
+通常刪除：physiologic FDG uptake / others negative / no significant abnormality / clinical correlation recommended
+
+【Impression 保留內容】
+只保留：
+1. primary malignancy
+2. LN metastasis
+3. distant metastasis
+4. recurrence
+5. inflammatory vs metastasis DDx
+
+【PET Summary 範例】
+Summary for Medical Record
+Left breast hypermetabolic lesion w/ left axillary/internal mammary LNs, FDG-avid liver and bone mets, cT2N3M1.
+
+----------------------------------------------------------------
+Bone Scan 專用規則
+----------------------------------------------------------------
+
+Bone scan 核心：「只留異常 uptake」，Procedure 全刪。
+
+【Score 必須保留】
+範例：Suspicious for bone metastasis (Score 4)
+
+【Bone Scan 排序】
+1. bone metastasis
+2. degenerative change
+3. inflammatory change
+4. incidental finding
+
+【Bone lesion 格式】
+location + score + interpretation
+範例：Right acetabulum MDP-avid lesion (Score 4), suspicious for metastasis.
+
+【Bone Scan Summary 範例】
+Summary for Medical Record
+MDP-avid lesions at right acetabulum and L1 (Score 4), suspicious for bone mets.
+
+----------------------------------------------------------------
+Breast Ultrasound 專用規則
+----------------------------------------------------------------
+
+乳超核心：「位置導向」
+
+【位置格式固定】
+範例：R/11'/2 cm 或 L/3'/1 cm
+
+【病灶順序固定】
+size -> shape -> margin -> echo -> calcification -> vascularity
+
+【LN 規則】
+LN 放最前面。
+範例：LN(+) Left Axillary
+
+【不寫正常描述】
+通常刪除：no duct dilatation / nil / no posterior echo / no calcification / no hypervascularity
+
+【Summary 風格】極短病歷風
+範例：R/11'/2 cm irregular hypoechoic mass w/ vascularity, LN(+) L axilla, BIRADS 5.
+
+----------------------------------------------------------------
+Mammography 專用規則
+----------------------------------------------------------------
+
+Mammography 核心：「篩檢摘要」
+
+【排序固定】
+1. density
+2. mass
+3. calcification
+4. asymmetry/distortion
+5. LN
+6. BI-RADS
+7. recommendation
+
+【Density 統一】
+ACR-A -> fatty
+ACR-B -> scattered fibroglandular density
+ACR-C -> heterogeneously dense
+ACR-D -> extremely dense
+
+【BI-RADS 統一】
+BI-RADS X
+
+【Recommendation 簡化】
+範例：Suggest breast ultrasound correlation.
+
+【Mammography Summary 範例】
+Summary
+Right upper axillary focal asymmetry w/ suspicious right axillary LNs, BI-RADS 0.
+
+----------------------------------------------------------------
+Abdominal Ultrasound 專用規則
+----------------------------------------------------------------
+
+腹超核心：「器官分類 + 只留異常」
+
+【器官固定順序】
+1. Liver
+2. Gallbladder
+3. Pancreas
+4. Kidneys
+5. Spleen
+6. Urinary bladder
+7. Other
+
+【Liver segment 保留】
+例如：S7 / S8
+
+【cyst 原則】
+小單純 cyst：通常省略。
+保留情況：多顆 / complicated / 需要追蹤 / differential diagnosis relevant
+
+【必須保留】
+hydronephrosis / ascites / pleural effusion / stone / sludge / mass
+
+【Abdominal US Summary 範例】
+Summary for Medical Record
+Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hydronephrosis.
+
+----------------------------------------------------------------
+影像風格本質（最重要）
+----------------------------------------------------------------
+
+風格本質：「Oncology-oriented compressed reporting」
+真正核心不是「摘要」，而是「重新排序資訊優先度」
+
+風格特點：
+- 刪掉正常資訊
+- 重排病灶順序
+- 保留 staging
+- 保留治療相關變化
+- 強化 malignant findings
+- 壓縮成門診語言
+- 最後加 clinician one-line summary
+
+接近：tumor board language / oncology chart abstraction / structured oncology reporting / oncology-oriented AI summarization system
+
+================================================================
+治療計畫
+================================================================
+
+依「療程」分段，每個療程內依時序列出：
+
+Initial course (年-年) — 標註當時的 subtype 與分期：
+- Surgery: 術式 (日期)
+- RT: 起始日期 to 結束日期 (總天數，若有延遲說明原因)
+  Phase 1: 部位 劑量/分次
+  Phase 2: 部位 劑量/分次
+  Total: 總劑量/總分次
+- Adjuvant CT: regimen，每個 cycle 日期、藥物、劑量
+- Hormone therapy: 藥物 起訖日期，劑量調整紀錄
+
+Recurrence course (年-年) — 標註當時的 subtype 與 staging：
+- 同上格式
+
+特別規則：
+- RT 必須附上起訖日期、總劑量、總分次，分階段時要分別列出
+- 若 RT 有延遲，要計算實際天數 vs 預期天數，標註延遲原因（假日、副作用等）
+- 化療每個 cycle 的日期都要列出，不可僅寫「x N cycles」
+- 標靶治療同樣要列出每次給藥日期
+
+================================================================
+AI 建議參考（非病歷內容，僅供醫師參考）
+================================================================
+
 以下為 AI 根據上述資料結合放射腫瘤科臨床慣例所提出之建議，不代表實際醫囑，最終決策請由主治醫師判斷。如果處置不符合現行醫學亦要誠實建議。
 
 RT role: 根治性或姑息性 RT 建議，含劑量分割方式
+  - 若為 re-irradiation 情境，必須列出多個 dose option 並說明 cumulative dose 考量
 Systemic therapy: 化療、標靶、免疫、荷爾蒙建議
+  - 若分子形態有演變，要根據最新 subtype 給建議
 Suggested workup: 尚缺的評估項目
 Supportive care: 營養、疼痛、口腔照護等
 Follow-up: 治療後追蹤建議
 
----
-書寫規則：
-英文書寫，章節標題保留中文
-民國年自動轉換為西元年
-影像、病理各自獨立一行，以 #類型(日期): 開頭
-IHC 有百分比者省略+號，直接寫 ER(99%)；無百分比者保留+/-號
-Past Medical History 若有記錄陰性項目如 DM(-)/HTN(-)，代表有問過，應保留
-Present Illness 以 2-3 句為限；診斷後才執行的治療省略不寫
-Past Medical History 只列疾病名稱，省略療程細節
-Physical Examination 只寫異常發現；若全部正常則寫 PE ok
-PET-CT 整理：主病灶數據 -> 轉移部位簡述 -> 分期，控制在 2-3 句
-修正明顯錯字，但不改變原意
-AI 建議區可中英混用，可引用醫學知識；病歷整理區寧可留空，不可猜測
+================================================================
+書寫規則
+================================================================
 
----
+【語言與格式】
+- 英文書寫，章節標題保留中文
+- 民國年自動轉換為西元年
+- 影像、病理各自獨立一行，以 #類型(日期): 開頭
+
+【IHC 寫法】
+- 有百分比者省略 + 號，直接寫 ER(99%)
+- 無百分比者保留 +/- 號
+
+【病史細節】
+- Past Medical History 若有記錄陰性項目如 DM(-)/HTN(-)，代表有問過，應保留
+- Present Illness 以 2-3 句為限；診斷後才執行的治療省略不寫
+- Past Medical History 只列疾病名稱，省略療程細節
+- Physical Examination 只寫異常發現；若全部正常則寫 PE ok
+
+【RT 紀錄】
+- 起訖日期必填
+- 分階段（main field + boost）必須分別列出
+- 累計劑量必填
+- 若有延遲必須計算並說明原因
+
+【分子形態追蹤】（重點）
+- 乳癌、胃癌等分子形態可能改變的腫瘤，每次切片都要記錄該次的 IHC
+- 不可用最終形態套用全程
+- 診斷句要呈現演變過程
+- 病理檢查段落末尾附上「分子形態演變總覽」表格
+
+【其他】
+- 修正明顯錯字，但不改變原意
+- AI 建議區可中英混用，可引用醫學知識；病歷整理區寧可留空，不可猜測
+
+================================================================
 輸入病歷資料：
+================================================================
 [貼上原始病摘、檢驗、病理、影像報告]`
             },
             {
@@ -1106,14 +1480,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.14.1</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.14.2</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.14.1</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.14.2</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
