@@ -3,13 +3,13 @@
   病歷整理器 (Chart) - 放射腫瘤科病歷結構化整理工具
   功能：病歷整理 / AI 摘要 / 多格式匯出
   Made by SELA · Radiation Oncology · CBSHOW
-  Version: V7.0.0
+  Version: V7.0.1
 -->
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V7.0.0</title>
+    <title>病歷整理器 V7.0.1</title>
     <meta name="theme-color" content="#F36825">
     <!-- SELA Favicon Set -->
     <link rel="icon" type="image/svg+xml" href="favicon/sela.svg">
@@ -164,7 +164,7 @@
 <body>
     <div class="login-overlay" id="loginOverlay">
         <div class="login-box">
-            <img src="logo.jpg" alt="SELA" style="width:60px;height:60px;border-radius:8px;margin-bottom:12px;">
+            <img src="favicon/sela.svg" alt="SELA" style="width:60px;height:60px;border-radius:8px;margin-bottom:12px;">
             <h2 style="margin:0 0 8px 0;font-size:1.1rem;color:var(--text);">病歷整理器</h2>
             <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:16px;">Radiation Oncology · CBSHOW</div>
             <input type="password" id="loginPassword" placeholder="請輸入密碼" onkeypress="if(event.key==='Enter')checkLogin()">
@@ -176,9 +176,9 @@
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <img src="logo.jpg" alt="SELA" class="logo">
+                <img src="favicon/sela.svg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V7.0.0</h1>
+                    <h1>病歷整理器 V7.0.1</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -814,7 +814,7 @@ Abdominal Ultrasound
 ================================================================
 輸入病歷資料：
 ================================================================
-[貼上原始病摘、檢驗、病理、影像報告]\`
+[貼上原始病摘、檢驗、病理、影像報告]`
             },
             {
                 name: '多專科會議 JSON',
@@ -1266,14 +1266,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.0</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.1</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.0</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.1</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
