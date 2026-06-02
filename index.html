@@ -3,13 +3,13 @@
   病歷整理器 (Chart) - 放射腫瘤科病歷結構化整理工具
   功能：病歷整理 / AI 摘要 / 多格式匯出
   Made by SELA · Radiation Oncology · CBSHOW
-  Version: V7.0.3
+  Version: V7.0.4
 -->
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V7.0.3</title>
+    <title>病歷整理器 V7.0.4</title>
     <meta name="theme-color" content="#F36825">
     <!-- SELA Favicon Set -->
     <link rel="icon" type="image/svg+xml" href="favicon/sela.svg">
@@ -178,7 +178,7 @@
             <div class="header-left">
                 <img src="favicon/sela.svg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V7.0.3</h1>
+                    <h1>病歷整理器 V7.0.4</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -618,7 +618,7 @@
 核心原則（最高優先）
 ================================================================
 1. 只能使用貼上的資料，絕對不可自行推斷、補充、或引用任何外部醫學知識與記憶
-2. 資料不足時，直接標註「資料不足」，不可猜測或填入看似合理的內容
+2. 資料不足時，直接留空，不填任何文字
 3. 良性、退化性、偶發性無關病灶不需提及，只保留與主診斷相關的陽性發現
 4. 病人腫瘤分子形態可能會隨時間改變，必須依時序分別記錄各次切片的分子分型
 
@@ -637,28 +637,35 @@
 ================================================================
 
 診斷
-一句話診斷，格式：[Grade] [病理類型] of [器官], [位置], [IHC直接列出], s/p [手術] (日期), [pTNM], [margins/LVI/PNI], [LN狀態]; for [放射線治療意圖]
+依腫瘤類型選擇適當格式：
 
-範例：Grade 2 invasive ductal carcinoma of breast, L/2'/6, ER(>90%)PR(20%)HER2(2+, FISH-), Ki-67(20%), s/p left partial mastectomy + SNBx (2026-04-23), pT1cN0, margins free (closest 4 mm deep), LVI(+), PNI(-), SN 0/1; for adjuvant RT
+乳癌格式：
+[Grade] [病理類型] of breast, [位置L/X'/Xcm], [IHC直接列出], s/p [手術] (日期), [pTNM], [margins/LVI/PNI], [LN狀態]; for [放射線治療意圖]
+
+非乳癌、無手術的診斷格式（例如食道癌、頭頸癌等）：
+[分化程度] [病理類型] of [器官], [位置/解剖描述], [cTNM], [主要 LN 及轉移部位簡述]; for [治療意圖]
+
+範例（食道癌）：
+Moderately differentiated squamous cell carcinoma of esophagus, middle-to-lower third (28–33 cm from incisor), cT3N1M1, with celiac LN metastases and para-aortic LN (L3, distant metastasis); for palliative treatment evaluation.
 
 ---
 病史
 #Present Illness: 2-3句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。診斷後才執行的治療省略不寫。
-#Past Medical History: 只列疾病或手術名稱，以逗號分隔。資料不足則標註，有寫 nil 即有問標示 Nil。若有 DM(-)/HTN(-) 等陰性項目應保留。
-#Family History: 資料不足則標註，有寫 nil 即有問標示 Nil。
+#Past Medical History: 只列疾病或手術名稱，以逗號分隔。有寫 nil 即有問標示 Nil。若有 DM(-)/HTN(-) 等陰性項目應保留。
+#Family History: 有寫 nil 即有問標示 Nil。
 #Social History: Smoking: X / Alcohol: X / Betel nut: X
 #Gynecologic / Breast History:（僅乳癌或婦癌）
-- Menarche / Menopause / Parity / Hormone therapy / Prior surgery 各項列出
-#Drug Allergy: 資料不足則標註
+Menarche / Menopause / Parity / Hormone therapy / Prior surgery 各項列出；其他癌別完全省略此欄
+#Drug Allergy:
 ---
 理學檢查
-#ECOG: X
-#Body weight: X
-#Physical Examination: 只寫異常發現；若全部正常則寫 able to arrow / PE: grossly normal
+#ECOG:
+#Body weight:
+#Physical Examination: 只寫異常發現；若全部正常則寫 general condition ok
 ---
 癌指數
 #指標名稱: 數值 (日期) -> 數值 (日期)
-若無資料則標註「資料不足」
+若無資料則留空
 
 ---
 病理檢查
@@ -671,112 +678,27 @@
 依時序填入各次切片資料。
 ---
 影像檢查
-依下方「影像摘要規範」處理。每份報告一行，以 #影像類型(日期): 開頭。良性、退化、無關病灶略去。
+每份報告一行，以 #影像類型(日期): 開頭。良性、退化、無關病灶略去。
+
 ---
 治療計畫
 Initial course (年)
-Subtype: X, cTNM -> pTNM
+cTNM -> pTNM（若有手術則填入）
 - Surgery: 術式 (日期)
-- RT: 起訖日期，劑量/分次（資料不足則標註）
+- RT: 起訖日期，劑量/分次
+- Chemotherapy: 藥物、劑量、日期
 - Hormone therapy: 藥物 (起始日期)
+- Other: 說明
 
 ---
 AI 建議參考（非病歷內容，僅供醫師參考）
 > 不代表實際醫囑，最終決策請由主治醫師判斷。
 
-- RT role: 建議內容
-- Systemic therapy: 建議內容
-- Suggested workup: 建議內容
-- Supportive care: 建議內容
-- Follow-up: 建議內容
-
-================================================================
-影像摘要規範
-================================================================
-
-【核心風格】
-必須：簡潔、腫瘤導向、positive finding 優先、同器官整合、高資訊密度
-禁止：過度推論、自行增加 diagnosis、冗長正常描述、clinical correlation 廢話、copy-paste 原文
-
-【病灶排序】固定優先順序：
-1. Primary tumor
-2. Recurrence
-3. Metastasis
-4. Lymphadenopathy
-5. Bone lesions
-6. Treatment-related changes
-7. Normal findings（通常省略）
-
-【病灶描述順序】
-Location -> Size -> Key feature -> Impression
-範例：Liver S8, 3 cm arterial enhancing lesion with washout, suspicious for HCC.
-
-【同器官整合】
-不要：Liver lesion... Another liver lesion...
-改成：Liver: S5 and S8 arterial enhancing lesions, up to 3 cm.
-
-【省略內容】
-spleen unremarkable、no ascites、no bowel obstruction、physiologic uptake、normal pancreas、Recommend clinical correlation、Continued imaging follow-up
-
-【保留內容】
-治療後變化：s/p lobectomy、post-RFA change、post-CCRT change、post-op fibrosis
-
-【用字統一】
-suspicious for -> suspicious、likely due to -> likely、cannot be ruled out -> cannot exclude
-distant metastasis 統一寫：No distant mets.
-
-----------------------------------------------------------------
-CT / MRI
-----------------------------------------------------------------
-#CT/MRI (日期): 排序：malignancy -> LN -> mets -> post-treatment change
-MRI 保留：diffusion restriction、T1/T2 signal、enhancement、washout
-Bone lesion：T8-T12 mixed sclerotic/lytic lesions, compatible with bone mets.
-LN：Left paraaortic LN, 10 mm, suspicious for metastasis.
-Staging 若有：cT4N2M1 (AJCC 8th edition)
-
-----------------------------------------------------------------
-PET/CT
-----------------------------------------------------------------
-#PET-CT (日期): FDG 異常地圖
-病灶格式：Organ: location, size, FDG: SUVmax A -> B
-分類：Head and Neck / Chest / Abdomen and Pelvis / Musculoskeletal
-多發整合：Bones: T5, T9-11, L1, sacrum, FDG: SUVmax 8.3 -> 11.8
-省略：physiologic FDG uptake、others negative
-保留：primary malignancy、LN mets、distant mets、recurrence
-範例：Left breast 1.2 cm, SUVmax 2.9, no LN or distant mets, cT1cN0M0.
-
-----------------------------------------------------------------
-Bone Scan
-----------------------------------------------------------------
-#Bone Scan (日期): 只留異常 uptake，Procedure 全刪
-格式：location + score + interpretation
-範例：Right acetabulum MDP-avid lesion (Score 4), suspicious for metastasis.
-
-----------------------------------------------------------------
-Breast Sono
-----------------------------------------------------------------
-#Breast Sono (日期): 位置導向
-LN 放最前面：LN(+) bilateral axilla.
-位置格式：L/2'/6 cm: 1.2 cm lobulated hypoechoic mass
-省略：no duct dilatation、no calcification、no hypervascularity
-範例：L/2'/6 cm 1.2 cm hypoechoic lobulated mass, LN(+) bil. axilla, BIRADS 4-5.
-
-----------------------------------------------------------------
-Mammography
-----------------------------------------------------------------
-#Mammography (日期): 篩檢摘要
-排序：density -> mass -> calcification -> asymmetry -> LN -> BI-RADS
-Density：ACR-A fatty、ACR-B scattered、ACR-C heterogeneously dense、ACR-D extremely dense
-範例：Right upper axillary focal asymmetry w/ suspicious right axillary LNs, BI-RADS 0.
-
-----------------------------------------------------------------
-Abdominal Ultrasound
-----------------------------------------------------------------
-#Abd Sono (日期): 器官分類，只留異常
-順序：Liver -> GB -> Pancreas -> Kidneys -> Spleen -> Bladder
-省略：小單純 cyst
-保留：hydronephrosis、ascites、pleural effusion、stone、sludge、mass
-範例：Liver cirrhosis w/ S8 hepatic mass, GB sludge/stones, bil. hydronephrosis.
+- RT role:
+- Systemic therapy:
+- Suggested workup:
+- Supportive care:
+- Follow-up:
 
 ================================================================
 書寫規則
@@ -788,20 +710,23 @@ Abdominal Ultrasound
 - IHC 有百分比者直接寫 ER(>90%)，無百分比者寫 HER2(2+)
 - 英文書寫，章節標題保留中文
 - 民國年自動轉換為西元年
+- 資料不足時直接留空，不填任何說明文字
 
 【診斷句】
-- 要包含位置（乳癌用 L/2'/6 格式）
-- IHC 直接列出數值，不用 subtype 名稱（subtype 只在表格出現）
+- 乳癌：位置用 L/2'/6 格式，IHC 直接列出數值
+- 非乳癌無手術者：用 [分化程度] [病理類型] of [器官], [位置], [cTNM], [LN/mets 簡述] 格式
 - 簡潔，一句話完成
 
 【病史】
 - Past Medical History 只列疾病名稱，以逗號分隔，不分行
 - 若有陰性項目如 DM(-)/HTN(-)，代表有問過，應保留
+- 資料不足直接留空
 
 【病理】
 - 每次切片獨立一行
 - 手術檢體需附 pTNM
 - Subtype 名稱只在「分子形態演變總覽」表格出現
+- 無資料欄位直接略去
 
 【影像】
 - 簡潔，每份一行
@@ -1267,14 +1192,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.3</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.4</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.3</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.4</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
