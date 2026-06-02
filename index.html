@@ -3,13 +3,13 @@
   病歷整理器 (Chart) - 放射腫瘤科病歷結構化整理工具
   功能：病歷整理 / AI 摘要 / 多格式匯出
   Made by SELA · Radiation Oncology · CBSHOW
-  Version: V7.0.2
+  Version: V7.0.3
 -->
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V7.0.2</title>
+    <title>病歷整理器 V7.0.3</title>
     <meta name="theme-color" content="#F36825">
     <!-- SELA Favicon Set -->
     <link rel="icon" type="image/svg+xml" href="favicon/sela.svg">
@@ -178,7 +178,7 @@
             <div class="header-left">
                 <img src="favicon/sela.svg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V7.0.2</h1>
+                    <h1>病歷整理器 V7.0.3</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -324,8 +324,8 @@
                         <label>日期</label>
                         <input type="text" id="pathologyDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)" onblur="validateDateInput(this)">
                         <div class="category-group">
-                            <label><input type="checkbox" id="pathCatBiopsy" checked> Biopsy</label>
-                            <label><input type="checkbox" id="pathCatPathology"> Pathology</label>
+                            <label><input type="checkbox" id="pathCatBiopsy" checked onchange="if(this.checked)document.getElementById('pathCatPathology').checked=false;"> Biopsy</label>
+                            <label><input type="checkbox" id="pathCatPathology" onchange="if(this.checked)document.getElementById('pathCatBiopsy').checked=false;"> Pathology</label>
                             <label><input type="checkbox" id="pathCatMolecular"> 分子檢測</label>
                         </div>
                         <button class="btn btn-success" onclick="savePathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
@@ -348,7 +348,7 @@
                     <h4>影像報告</h4>
                     <div class="editor-row">
                         <label>種類</label>
-                        <select id="imagingType" style="width:95px;"><option>CT</option><option>MRI</option><option>Bone scan</option><option>PET-CT</option><option>Sono</option><option>Breast Sono</option><option>Endoscopy</option><option>Other</option></select>
+                        <select id="imagingType" style="width:110px;"><option>CT</option><option>MRI</option><option>Bone scan</option><option>PET-CT</option><option>Sono</option><option>Breast Sono</option><option>Mammography</option><option>Endoscopy</option><option>Other</option></select>
                         <label>日期</label>
                         <input type="text" id="imagingDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)" onblur="validateDateInput(this)">
                         <button class="btn btn-success" onclick="saveImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
@@ -1267,14 +1267,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.2</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.3</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.2</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.3</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>

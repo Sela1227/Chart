@@ -19,7 +19,7 @@
 
 ## 〇、當前狀態
 
-- **版本：** V7.0.2
+- **版本：** V7.0.3
 - **狀態：** 上線中（臨床使用）
 - **一句話定位：** 放射腫瘤科病歷結構化整理工具，支援 AI 摘要、多格式匯出
 - **技術棧：** 純 HTML + CSS + Vanilla JS（單檔）
@@ -106,6 +106,7 @@
 
 | 版本 | 重點 |
 |------|------|
+| V7.0.3 | 影像類型加入 Mammography；Biopsy/Pathology 改為互斥 |
 | V7.0.2 | 腫瘤指數：儲存+繼續後保留日期、日期旁加清除按鈕 |
 | V7.0.1 | 修正 logo.jpg 404 + JS 語法錯誤；專案正式定名 Chart |
 | V7.0.0 | 首次對齊 SELA-Starter-Kit V1.8.2，換 SELA favicon 套組，加 .gitignore / CLAUDE.md |
@@ -135,7 +136,7 @@
 
 ## 八、升版必讀
 
-### V7.0.2 部署動作
+### V7.0.3 部署動作
 
 - [x] favicon 套組已更新（`favicon/` 資料夾）
 - [x] .gitignore 已加入
@@ -147,4 +148,4 @@
 
 ## 九、一句話總結
 
-V7.0.2 首次對齊 SELA-Starter-Kit，換上高清 favicon、加入 .gitignore 和 CLAUDE.md，下版第一優先是 PDF 匯出品質優化。
+V7.0.3 首次對齊 SELA-Starter-Kit，換上高清 favicon、加入 .gitignore 和 CLAUDE.md，下版第一優先是 PDF 匯出品質優化。
