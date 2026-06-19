@@ -1,10 +1,22 @@
 <!DOCTYPE html>
+<!--
+  病歷整理器 (Chart) - 放射腫瘤科病歷結構化整理工具
+  功能：病歷整理 / AI 摘要 / 多格式匯出
+  Made by SELA · Radiation Oncology · CBSHOW
+  Version: V7.0.5
+-->
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V6.12.1</title>
-    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <title>病歷整理器 V7.0.5</title>
+    <meta name="theme-color" content="#F36825">
+    <!-- SELA Favicon Set -->
+    <link rel="icon" type="image/svg+xml" href="favicon/sela.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -12,6 +24,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
+            /* 保留原有配色（已驗證） */
             --primary: #F97316;
             --primary-hover: #EA580C;
             --bg-main: #CBD5E1;
@@ -121,6 +134,9 @@
         .settings-btn:hover { background: var(--bg-secondary); color: var(--text-primary); }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; }
         .modal-overlay.show { display: flex; }
+        .login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #CBD5E1; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: #F1F5F9; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; max-width: 280px; width: 90%; }
+        .login-box input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; text-align: center; background: #FFFFFF; }
         .modal { background: var(--bg-card); border-radius: 10px; padding: 20px; max-width: 450px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
         .modal h3 { font-size: 1rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .modal .form-group { margin-bottom: 12px; }
@@ -146,12 +162,23 @@
     </style>
 </head>
 <body>
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <img src="favicon/sela.svg" alt="SELA" style="width:60px;height:60px;border-radius:8px;margin-bottom:12px;">
+            <h2 style="margin:0 0 8px 0;font-size:1.1rem;color:var(--text);">病歷整理器</h2>
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:16px;">Radiation Oncology · CBSHOW</div>
+            <input type="password" id="loginPassword" placeholder="請輸入密碼" onkeypress="if(event.key==='Enter')checkLogin()">
+            <button class="btn btn-primary" onclick="checkLogin()" style="width:100%;margin-top:8px;">進入</button>
+            <div id="loginError" style="color:var(--danger);font-size:0.7rem;margin-top:8px;display:none;">密碼錯誤</div>
+        </div>
+    </div>
+    <div class="main-app" id="mainApp" style="display:none;">
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <img src="logo.jpg" alt="SELA" class="logo">
+                <img src="favicon/sela.svg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V6.12.1</h1>
+                    <h1>病歷整理器 V7.0.5</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -162,6 +189,7 @@
         </div>
         
         <div class="tabs">
+            <button class="btn btn-outline" onclick="clearAll()" style="color:var(--danger);border-color:var(--danger);padding:5px 8px;margin-right:8px;" title="清除全部資料"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>重填</button>
             <button class="tab-btn active" data-tab="prompt"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Prompt</button>
             <button class="tab-btn" data-tab="patient"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>病人</button>
             <button class="tab-btn" data-tab="summary"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>病摘</button>
@@ -191,6 +219,7 @@
                     <div class="template-header" style="flex-wrap:wrap;">
                         <h4>範本清單</h4>
                         <div class="btn-group" style="flex-wrap:nowrap;">
+                            <button class="btn btn-outline" onclick="copyPrompt()" title="複製 Prompt"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>複製</button>
                             <button class="btn btn-outline" id="btnEditTemplate" onclick="enableEditMode()"><svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>編輯</button>
                             <button class="btn btn-primary" id="btnSaveTemplate" onclick="saveTemplateContent()" style="display:none;"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
                             <button class="btn btn-outline" id="btnCancelEdit" onclick="cancelEditMode()" style="display:none;"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
@@ -214,6 +243,10 @@
         </div>
         
         <div class="tab-content" id="tab-patient">
+            <div class="btn-group" style="margin-bottom:10px;">
+                <div class="checkbox-group" style="margin-bottom:0;"><input type="checkbox" id="maskInfo" checked><label for="maskInfo">遮蔽姓名</label></div>
+                <button class="btn btn-outline" onclick="clearPatientTab()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
+            </div>
             <div class="helper-text"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>病歷號/姓名會自動加入檔名，年齡選填</div>
             <div class="form-group" style="max-width:300px;"><label>病歷號</label><input type="text" id="patientMRN" placeholder="病歷號" onchange="markDataChanged()" oninput="updatePatientInfoBar()"></div>
             <div class="form-row">
@@ -224,13 +257,13 @@
                 <div class="form-group" style="width:140px;"><label>ECOG</label><select id="ecog" onchange="markDataChanged()"><option value="">不填</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
                 <div class="form-group" style="flex:1;max-width:240px;"><label>衰弱量表</label><select id="cfs" onchange="markDataChanged()"><option value="">不填</option><option value="1">1：非常健壯</option><option value="2">2：健康良好</option><option value="3">3：日常可自理</option><option value="4">4：脆弱但尚可自理</option><option value="5">5：輕度衰弱</option><option value="6">6：中度衰弱</option><option value="7">7：重度衰弱</option><option value="8">8：極重度衰弱</option><option value="9">9：末期病人</option></select></div>
             </div>
-            <div class="checkbox-group"><input type="checkbox" id="maskInfo"><label for="maskInfo">遮蔽姓名</label></div>
-            <button class="btn btn-outline" onclick="clearPatientTab()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
         </div>
         
         <div class="tab-content" id="tab-summary">
+            <div class="btn-group" style="margin-bottom:8px;">
+                <button class="btn btn-outline" onclick="clearField('summaryText')"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
+            </div>
             <div class="form-group"><label>病摘內容</label><textarea id="summaryText" rows="13" placeholder="輸入病摘..." onchange="markDataChanged()"></textarea></div>
-            <button class="btn btn-outline" onclick="clearField('summaryText')"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
         </div>
         
         <div class="tab-content" id="tab-lab">
@@ -242,7 +275,7 @@
                     <label style="font-weight:600;font-size:0.75rem;color:var(--text-primary);">腫瘤指數追蹤</label>
                     <div class="btn-group">
                         <button class="btn btn-primary" onclick="startMarkerEdit(null)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增</button>
-                        <button class="btn btn-outline" onclick="clearAllMarkers()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空</button>
+                        <button class="btn btn-outline" onclick="clearAllMarkers()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
                     </div>
                 </div>
                 <div class="editor-panel" id="markerEditor">
@@ -264,6 +297,7 @@
                         <div style="display:flex;align-items:center;gap:4px;">
                             <label>日期</label>
                             <input type="text" id="markerDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)" onblur="validateDateInput(this)">
+                            <button class="btn btn-outline" style="padding:4px 8px;min-width:auto;" onclick="document.getElementById('markerDate').value='';document.getElementById('markerDate').focus();" title="清除日期"><svg class="icon" viewBox="0 0 24 24" style="width:14px;height:14px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                         </div>
                         <div style="display:flex;align-items:center;gap:4px;">
                             <label>數值</label>
@@ -282,7 +316,7 @@
         <div class="tab-content" id="tab-pathology">
             <div class="btn-group" style="margin-bottom:8px;">
                 <button class="btn btn-primary" onclick="startPathologyEdit(null)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增</button>
-                <button class="btn btn-outline" onclick="clearAllPathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空</button>
+                <button class="btn btn-outline" onclick="clearAllPathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
             </div>
             <div class="editor-panel" id="pathologyEditor">
                 <div class="editor-header">
@@ -291,8 +325,9 @@
                         <label>日期</label>
                         <input type="text" id="pathologyDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)" onblur="validateDateInput(this)">
                         <div class="category-group">
-                            <label><input type="checkbox" id="pathCatBiopsy" checked> Biopsy</label>
-                            <label><input type="checkbox" id="pathCatPathology"> Pathology</label>
+                            <label><input type="checkbox" id="pathCatBiopsy" checked onchange="if(this.checked)document.getElementById('pathCatPathology').checked=false;"> Biopsy</label>
+                            <label><input type="checkbox" id="pathCatPathology" onchange="if(this.checked)document.getElementById('pathCatBiopsy').checked=false;"> Pathology</label>
+                            <label><input type="checkbox" id="pathCatMolecular"> 分子檢測</label>
                         </div>
                         <button class="btn btn-success" onclick="savePathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
                         <button class="btn btn-outline" onclick="cancelPathologyEdit()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
@@ -307,14 +342,14 @@
         <div class="tab-content" id="tab-imaging">
             <div class="btn-group" style="margin-bottom:8px;">
                 <button class="btn btn-primary" onclick="startImagingEdit(null)"><svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增</button>
-                <button class="btn btn-outline" onclick="clearAllImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清空</button>
+                <button class="btn btn-outline" onclick="clearAllImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
             </div>
             <div class="editor-panel" id="imagingEditor">
                 <div class="editor-header">
                     <h4>影像報告</h4>
                     <div class="editor-row">
                         <label>種類</label>
-                        <select id="imagingType" style="width:95px;"><option>CT</option><option>MRI</option><option>Bone scan</option><option>PET-CT</option><option>Sono</option><option>Breast Sono</option><option>Endoscopy</option><option>Other</option></select>
+                        <select id="imagingType" style="width:110px;"><option>CT</option><option>MRI</option><option>Bone scan</option><option>PET-CT</option><option>Sono</option><option>Breast Sono</option><option>Mammography</option><option>Endoscopy</option><option>Other</option></select>
                         <label>日期</label>
                         <input type="text" id="imagingDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)" onblur="validateDateInput(this)">
                         <button class="btn btn-success" onclick="saveImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
@@ -324,7 +359,7 @@
                 <div class="date-error-msg" id="imagingDateError">日期格式錯誤，請輸入正確日期</div>
                 <textarea id="imagingContent" rows="4" placeholder="報告內容..." style="margin-top:6px;"></textarea>
             </div>
-            <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:85px;">種類</th><th style="width:60px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
+            <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:90px;">種類</th><th>內容預覽</th><th style="width:60px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
         </div>
         
         <div class="tab-content" id="tab-preview">
@@ -350,17 +385,6 @@
             <div class="form-group"><label>AI 整理結果</label><textarea id="aiResultText" placeholder="AI 整理後的內容會顯示在這裡..." readonly></textarea></div>
         </div>
         
-        <div class="bottom-bar">
-            <div class="btn-group">
-                <button class="btn btn-primary" onclick="saveData()"><svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>暫存</button>
-                <button class="btn btn-outline" onclick="clearAll()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
-            </div>
-            <div class="btn-group">
-                <button class="btn btn-outline" onclick="exportTXT()"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>TXT</button>
-                <button class="btn btn-outline" onclick="exportHTML()"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>HTML</button>
-                <button class="btn btn-accent" onclick="exportPDF()"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
-            </div>
-        </div>
     </div>
     
     <div class="toast" id="toast"></div>
@@ -371,7 +395,7 @@
             <h3><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>AI 設定</h3>
             <div class="form-group">
                 <label>AI 服務</label>
-                <select id="aiProvider" style="max-width:200px;" disabled>
+                <select id="aiProvider" style="max-width:200px;" onchange="saveProviderChoice()">
                     <option value="openai">OpenAI (GPT)</option>
                     <option value="claude">Anthropic (Claude)</option>
                 </select>
@@ -401,6 +425,7 @@
                 <select id="presetSelect">
                     <option value="0">放腫病歷整理</option>
                     <option value="1">多專科會議 JSON</option>
+                    <option value="2">影像規範</option>
                 </select>
             </div>
             <div class="form-group">
@@ -428,8 +453,32 @@
             </div>
         </div>
     </div>
+    </div><!-- end main-app -->
     
     <script>
+        // ===== 密碼驗證 =====
+        const APP_PASSWORD = 'RTO';
+        function checkLogin(){
+            const pwd=document.getElementById('loginPassword').value;
+            if(pwd===APP_PASSWORD){
+                document.getElementById('loginOverlay').style.display='none';
+                document.getElementById('mainApp').style.display='block';
+                sessionStorage.setItem('chart_authenticated','1');
+            }else{
+                document.getElementById('loginError').style.display='block';
+                document.getElementById('loginPassword').value='';
+                document.getElementById('loginPassword').focus();
+            }
+        }
+        (function(){
+            if(sessionStorage.getItem('chart_authenticated')==='1'){
+                document.getElementById('loginOverlay').style.display='none';
+                document.getElementById('mainApp').style.display='block';
+            }else{
+                document.getElementById('loginPassword').focus();
+            }
+        })();
+        
         // ===== 授權驗證（目前停用）=====
         const ENABLE_DOMAIN_PROTECTION = false; // 設為 true 啟用網域保護
         (function(){
@@ -459,7 +508,6 @@
             loadAiSettings();
             isKeyEditMode=false;
             document.getElementById('aiProvider').value=aiSettings.provider;
-            document.getElementById('aiProvider').disabled=true;
             const keyInput=document.getElementById('aiApiKey');
             keyInput.value=aiSettings.apiKey?'••••••••••••••••':'';
             keyInput.readOnly=true;
@@ -472,7 +520,6 @@
         }
         function enableKeyEdit(){
             isKeyEditMode=true;
-            document.getElementById('aiProvider').disabled=false;
             const keyInput=document.getElementById('aiApiKey');
             keyInput.value=aiSettings.apiKey;
             keyInput.readOnly=false;
@@ -485,8 +532,6 @@
         }
         function cancelKeyEdit(){
             isKeyEditMode=false;
-            document.getElementById('aiProvider').value=aiSettings.provider;
-            document.getElementById('aiProvider').disabled=true;
             const keyInput=document.getElementById('aiApiKey');
             keyInput.value=aiSettings.apiKey?'••••••••••••••••':'';
             keyInput.readOnly=true;
@@ -497,6 +542,11 @@
             document.getElementById('btnSaveSettings').style.display='none';
         }
         function closeSettings(){cancelKeyEdit();document.getElementById('settingsModal').classList.remove('show');}
+        function saveProviderChoice(){
+            aiSettings.provider=document.getElementById('aiProvider').value;
+            saveAiSettings();
+            showToast('已切換至 '+(aiSettings.provider==='openai'?'OpenAI':'Claude'));
+        }
         function saveSettings(){
             if(isKeyEditMode){
                 aiSettings.provider=document.getElementById('aiProvider').value;
@@ -563,96 +613,134 @@
         const PRESET_TEMPLATES = [
             {
                 name: '放腫病歷整理',
-                content: `Prompt：放射腫瘤科病歷整理
+                content: `你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成結構化的臨床摘要。
 
-你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成結構化的臨床摘要。
-
-核心原則（最高優先）：
+================================================================
+核心原則（最高優先）
+================================================================
 1. 只能使用貼上的資料，絕對不可自行推斷、補充、或引用任何外部醫學知識與記憶
-2. 資料不足時，直接標註「資料不足」，不可猜測或填入看似合理的內容
+2. 資料不足時，直接留空，不填任何文字
 3. 良性、退化性、偶發性無關病灶不需提及，只保留與主診斷相關的陽性發現
+4. 病人腫瘤分子形態可能會隨時間改變，必須依時序分別記錄各次切片的分子分型
 
-輸出格式：
+================================================================
+格式規則（重要）
+================================================================
+- 不使用粗體（不要用 ** 或 __ 包圍文字）
+- 不使用 emoji
+- 不使用多層縮排，保持扁平結構
+- 段落內項目用 # 開頭，不用 - 開頭
+- 章節標題用文字加底線 --- 分隔，不用 ## 標題格式
+- 輸出要能直接貼到病歷系統，避免特殊格式符號
 
-## 診斷
-一句話診斷，包含：腫瘤部位、病理類型、分化程度、p16狀態、TNM分期（AJCC版本）、主要淋巴結情況、治療意圖。僅使用原始資料中明確記載的資訊。
+================================================================
+輸出格式
+================================================================
 
----
-## 病史
+診斷
+依腫瘤類型選擇適當格式：
 
-Present Illness:
-2-3句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。診斷後才執行的治療省略不寫。
+乳癌格式：
+[Grade] [病理類型] of breast, [位置L/X'/Xcm], [IHC直接列出], s/p [手術] (日期), [pTNM], [margins/LVI/PNI], [LN狀態]; for [放射線治療意圖]
 
-Past Medical History:
-只列疾病或手術名稱，省略療程細節與短期病程變化。資料不足則標註。
+非乳癌、無手術的診斷格式（例如食道癌、頭頸癌等）：
+[分化程度] [病理類型] of [器官], [位置/解剖描述], [cTNM], [主要 LN 及轉移部位簡述]; for [治療意圖]
 
-Family History:
-資料不足則標註。
-
-Social History:
-Smoking: 資料不足則標註
-Alcohol: 資料不足則標註
-Betel nut: 資料不足則標註
-
-若為乳癌或婦科癌症，額外加入以下欄位，其他癌別完全省略：
-Gynecologic / Breast History:
-Menarche / Menopause / Parity / Hormone therapy / Prior surgery: 各項資料不足則標註
-
-Drug Allergy:
-資料不足則標註
+範例（食道癌）：
+Moderately differentiated squamous cell carcinoma of esophagus, middle-to-lower third (28–33 cm from incisor), cT3N1M1, with celiac LN metastases and para-aortic LN (L3, distant metastasis); for palliative treatment evaluation.
 
 ---
-## 理學檢查
-ECOG: 資料不足則標註
-Body weight: 資料不足則標註
-Physical Examination (日期): 只寫異常發現；若全部正常則寫 PE ok
+病史
+#Present Illness: 2-3句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。診斷後才執行的治療省略不寫。
+#Past Medical History: 只列疾病或手術名稱，以逗號分隔。有寫 nil 即有問標示 Nil。若有 DM(-)/HTN(-) 等陰性項目應保留。
+#Family History: 有寫 nil 即有問標示 Nil。
+#Social History: Smoking: X / Alcohol: X / Betel nut: X
+#Gynecologic / Breast History:（僅乳癌或婦癌）
+Menarche / Menopause / Parity / Hormone therapy / Prior surgery 各項列出；其他癌別完全省略此欄
+#Drug Allergy:
+---
+理學檢查
+#ECOG:
+#Body weight:
+#Physical Examination: 只寫異常發現；若全部正常則寫 general condition ok
+---
+癌指數
+#指標名稱: 數值 (日期) -> 數值 (日期)
+若無資料則留空
 
 ---
-## 癌指數
-指標名稱: 數值 (日期) -> 數值 (日期) -> ... 時序排列
-單筆則直接列出；若無資料則標註「資料不足」
+病理檢查
+#Biopsy (日期): 部位 — 病理診斷，Grade。IHC 直接列出（有百分比寫 ER(>90%)，無百分比寫 HER2(2+)）。FISH 結果。
+#Surgery (日期): 部位 — 病理診斷，Grade，腫瘤大小。LVI/PNI/EIC。Margins 狀態。LN 狀態。Stage: pTNM。
+若有多次切片且分子形態可能變化（乳癌等），末尾加上：
+分子形態演變總覽
+| 時間點 | ER | PR | HER2 | Ki-67 | Subtype |
+|---|---|---|---|---|---|
+依時序填入各次切片資料。
+---
+影像檢查
+每份報告一行，以 #影像類型(日期): 開頭。良性、退化、無關病灶略去。
 
 ---
-## 病理檢查
-#類型(日期): 部位與術式 — 病理診斷，分化程度/分級。IHC: 陽性項目(+); 陰性項目(-)。特殊染色結果。重要備註。
-2-3句為上限；grossly描述、標本大小等細節省略。
+治療計畫
+Initial course (年)
+cTNM -> pTNM（若有手術則填入）
+- Surgery: 術式 (日期)
+- RT: 起訖日期，劑量/分次
+- Chemotherapy: 藥物、劑量、日期
+- Hormone therapy: 藥物 (起始日期)
+- Other: 說明
 
 ---
-## 影像檢查
-#影像類型(日期): 與主診斷直接相關的陽性發現及關鍵數據，1-3句。PET-CT格式：主病灶數據 -> 轉移部位簡述 -> 分期，控制在2-3句內。良性、退化、無關病灶一律略去。
+AI 建議參考（非病歷內容，僅供醫師參考）
+> 不代表實際醫囑，最終決策請由主治醫師判斷。
 
----
-## 治療計畫
-化療/標靶：列出每個 cycle 或每次給藥日期、藥物、劑量
-放療：劑量、分次、照射部位、開始日期
-手術、荷爾蒙等：依時序列出
-若無資料則標註
+- RT role:
+- Systemic therapy:
+- Suggested workup:
+- Supportive care:
+- Follow-up:
 
----
-## AI 建議參考（非病歷內容，僅供醫師參考）
-以下為 AI 根據上述資料結合放射腫瘤科臨床慣例所提出之建議，不代表實際醫囑，最終決策請由主治醫師判斷。
+================================================================
+書寫規則
+================================================================
 
-RT role: 根治性或姑息性 RT 建議，含劑量分割方式
-Systemic therapy: 化療、標靶、免疫、荷爾蒙建議
-Suggested workup: 尚缺的評估項目
-Supportive care: 營養、疼痛、口腔照護等
-Follow-up: 治療後追蹤建議
+【格式】
+- 不用粗體、不用 emoji、不用多層縮排
+- 項目用 # 開頭
+- IHC 有百分比者直接寫 ER(>90%)，無百分比者寫 HER2(2+)
+- 英文書寫，章節標題保留中文
+- 民國年自動轉換為西元年
+- 資料不足時直接留空，不填任何說明文字
 
----
-書寫規則：
-英文書寫，章節標題保留中文
-民國年自動轉換為西元年
-影像、病理各自獨立一行，以 #類型(日期): 開頭
-IHC 染色無論陰陽性一律完整列出
-Present Illness 以 2-3 句為限；診斷後才執行的治療省略不寫
-Past Medical History 只列疾病名稱，省略療程細節
-Physical Examination 只寫異常發現；若全部正常則寫 PE ok
-PET-CT 整理：主病灶數據 -> 轉移部位簡述 -> 分期，控制在 2-3 句
-修正明顯錯字，但不改變原意
-AI 建議區可中英混用，可引用醫學知識；病歷整理區寧可留空，不可猜測
+【診斷句】
+- 乳癌：位置用 L/2'/6 格式，IHC 直接列出數值
+- 非乳癌無手術者：用 [分化程度] [病理類型] of [器官], [位置], [cTNM], [LN/mets 簡述] 格式
+- 簡潔，一句話完成
 
----
+【病史】
+- Past Medical History 只列疾病名稱，以逗號分隔，不分行
+- 若有陰性項目如 DM(-)/HTN(-)，代表有問過，應保留
+- 資料不足直接留空
+
+【病理】
+- 每次切片獨立一行
+- 手術檢體需附 pTNM
+- Subtype 名稱只在「分子形態演變總覽」表格出現
+- 無資料欄位直接略去
+
+【影像】
+- 簡潔，每份一行
+- 不需要獨立 Summary 行，重點整合在描述內
+
+【AI建議】
+- 用 > 引言開頭說明非正式醫囑
+- 各項用 - 開頭
+- 可中英混用，可引用醫學知識
+
+================================================================
 輸入病歷資料：
+================================================================
 [貼上原始病摘、檢驗、病理、影像報告]`
             },
             {
@@ -683,6 +771,239 @@ Impression:...","images":[]}；其他癌別省略此欄位
 discussion：討論要點，一句話摘要本次討論重點
 topics：討論議題，從以下選填一或多項：["影像討論","病理討論","分期討論","治療策略討論"]
 以下是病人資料：`
+            },
+            {
+                name: '影像規範',
+                content: `Oncology Imaging Report Summarization Guideline
+（放腫/腫瘤影像摘要標準）
+
+一、核心總原則（所有影像共通）
+
+目標：
+門診病歷可直接貼上、MDT/tumor board 可直接使用、oncology-oriented、radiology concise style、不要教科書式 narrative
+
+核心風格：
+必須：簡潔、腫瘤導向、positive finding 優先、同器官整合、高資訊密度、實戰病歷風格
+禁止：過度推論、自行增加 diagnosis、冗長正常描述、clinical correlation 廢話、copy-paste 原文、長篇 narrative
+
+病灶排序規則（固定優先順序）：
+1. Primary tumor
+2. Recurrence
+3. Metastasis
+4. Lymphadenopathy
+5. Bone lesions
+6. Treatment-related changes
+7. Benign/incidental findings
+8. Normal findings（通常省略）
+
+病灶描述固定順序：
+Location -> Size -> Key feature -> Impression
+例如：Liver S8, 3 cm arterial enhancing lesion with washout, suspicious for HCC.
+
+同器官整合：
+不要：Liver lesion... Another liver lesion...
+改成：Liver: S5 and S8 arterial enhancing lesions, up to 3 cm.
+
+正常 findings 原則：
+大部分正常內容刪除。通常省略：spleen unremarkable、no ascites、no bowel obstruction、physiologic uptake、normal pancreas、no significant findings
+
+治療後變化必須保留：
+s/p lobectomy、post-RFA change、post-CCRT change、post-op fibrosis、post vertebroplasty
+
+用字統一規則：
+suspicious for -> suspicious、compatible with -> compatible with、suggestive of -> suggestive of、likely due to -> likely、cannot be ruled out -> cannot exclude
+
+distant metastasis 統一：
+No distant mets.（不要：No evidence of distant metastatic disease involving...）
+
+禁止冗詞：
+Recommend clinical correlation、Continued imaging follow-up、Please correlate clinically、For details please see description、no significant interval change、Report Source、Reported by
+
+---
+二、Final Summary Rule（最高優先級）
+
+所有影像檢查最後一定要有：Summary 或 Summary for Medical Record
+
+Summary 規格：
+單行、不分段、超高濃縮、門診病歷可直接貼上、保留最重要 malignancy-related findings、不寫廢話、不寫完整 narrative sentence、不重複前面 Findings
+
+Summary 描述順序（固定）：
+主要病灶 -> LN -> mets -> treatment change -> category/staging
+
+Summary 用字風格：
+使用縮寫：w/、bil.、LN(+)、mets、post-op、post-CCRT、suspicious、hypo/hyper
+
+Summary 禁止內容：
+complete sentences、recommend follow-up、correlate clinically、detailed explanation、there is、noted、identified
+
+---
+三、CT / MRI 專用規則
+
+標題：Imaging Report Summary
+
+Findings 排序：
+1. suspicious malignancy
+2. LN
+3. metastasis
+4. post-treatment change
+5. important incidental findings
+
+MRI 特殊資訊保留：
+diffusion restriction、T1 hypointense、T2 hyperintense、enhancement、washout、perifocal edema
+
+Bone lesion 格式：
+T8-T12 mixed sclerotic/lytic lesions, compatible with bone metastases.
+
+LN 格式：
+Left paraaortic LN, 10 mm, suspicious for metastasis.
+
+Staging（若原文有）：
+必須保留：cT、cN、cM、AJCC 8th edition
+例如：Imaging staging: pancreatic cancer cT4N2M1.
+
+CT/MRI Summary 範例：
+Summary for Medical Record
+RUL 2.3 cm spiculated mass w/ mediastinal LN enlargement and bilateral pulmonary nodules, suspicious lung ca w/ lung mets.
+
+---
+四、PET/CT 專用規則
+
+PET 核心：「FDG 異常地圖」
+
+PET 病灶格式（固定）：
+Organ: location, size, FDG: SUVmax A -> B
+例如：Tongue: left border, 1.3 cm, FDG: SUVmax 5.5 -> 7.0
+
+PET 分類固定：
+1. Head and Neck
+2. Chest
+3. Abdomen and Pelvis
+4. Musculoskeletal
+
+多發病灶整合：
+Bones: T5, T9-11, L1, sacrum, FDG: SUVmax 8.3 -> 11.8
+
+PET 省略原則：
+physiologic FDG uptake、others negative、no significant abnormality、clinical correlation recommended
+
+Impression 保留內容：
+1. primary malignancy
+2. LN metastasis
+3. distant metastasis
+4. recurrence
+5. inflammatory vs metastasis DDx
+
+PET Summary 範例：
+Summary for Medical Record
+Left breast hypermetabolic lesion w/ left axillary/internal mammary LNs, FDG-avid liver and bone mets, cT2N3M1.
+
+---
+五、Bone Scan 專用規則
+
+Bone scan 核心：「只留異常 uptake」，Procedure 全刪。
+
+Score 必須保留：
+Suspicious for bone metastasis (Score 4)
+
+Bone Scan 排序：
+1. bone metastasis
+2. degenerative change
+3. inflammatory change
+4. incidental finding
+
+Bone lesion 格式：
+location + score + interpretation
+例如：Right acetabulum MDP-avid lesion (Score 4), suspicious for metastasis.
+
+Bone Scan Summary 範例：
+Summary for Medical Record
+MDP-avid lesions at right acetabulum and L1 (Score 4), suspicious for bone mets.
+
+---
+六、Breast Ultrasound 專用規則
+
+乳超核心：「位置導向」
+
+位置格式固定：
+R/11'/2 cm、L/3'/1 cm
+
+病灶順序固定：
+size -> shape -> margin -> echo -> calcification -> vascularity
+
+LN 規則：
+LN 放最前面。例如：LN(+) Left Axillary
+
+不寫正常描述：
+no duct dilatation、nil、no posterior echo、no calcification、no hypervascularity
+
+Summary 風格（極短病歷風）：
+R/11'/2 cm irregular hypoechoic mass w/ vascularity, LN(+) L axilla, BIRADS 5.
+
+---
+七、Mammography 專用規則
+
+Mammography 核心：「篩檢摘要」
+
+排序固定：
+1. density
+2. mass
+3. calcification
+4. asymmetry/distortion
+5. LN
+6. BI-RADS
+7. recommendation
+
+Density 統一：
+ACR-A -> fatty、ACR-B -> scattered fibroglandular density、ACR-C -> heterogeneously dense、ACR-D -> extremely dense
+
+BI-RADS 統一：BI-RADS X
+
+Recommendation 簡化：
+Suggest breast ultrasound correlation.
+
+Mammography Summary 範例：
+Summary
+Right upper axillary focal asymmetry w/ suspicious right axillary LNs, BI-RADS 0.
+
+---
+八、Abdominal Ultrasound 專用規則
+
+腹超核心：「器官分類 + 只留異常」
+
+器官固定順序：
+1. Liver
+2. Gallbladder
+3. Pancreas
+4. Kidneys
+5. Spleen
+6. Urinary bladder
+7. Other
+
+Liver segment 保留：S7、S8
+
+cyst 原則：
+小單純 cyst 通常省略。保留情況：多顆、complicated、需要追蹤、differential diagnosis relevant
+
+必須保留：
+hydronephrosis、ascites、pleural effusion、stone、sludge、mass
+
+Abdominal US Summary 範例：
+Summary for Medical Record
+Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hydronephrosis.
+
+---
+風格核心：
+
+本質：「Oncology-oriented compressed reporting」
+
+真正核心不是「摘要」，而是「重新排序資訊優先度」
+
+風格特點：
+刪掉正常資訊、重排病灶順序、保留 staging、保留治療相關變化、強化 malignant findings、壓縮成門診語言、最後加 clinician one-line summary
+
+---
+輸入影像報告：
+[貼上原始影像報告]`
             }
         ];
         function showPresetModal(){document.getElementById('presetPassword').value='';document.getElementById('presetSelect').value='0';document.getElementById('presetTarget').value='0';document.getElementById('presetModal').classList.add('show');document.getElementById('presetPassword').focus();}
@@ -748,6 +1069,7 @@ topics：討論議題，從以下選填一或多項：["影像討論","病理討
         
         function renderTemplateList(){const l=document.getElementById('templateList');l.innerHTML='';data.promptTemplates.forEach((t,i)=>{const b=document.createElement('button');b.className='template-btn'+(i===selectedTemplateIndex?' selected':'');b.innerHTML=`${icons.file} ${t.name}${t.content.trim()?'*':''}`;b.onclick=()=>selectTemplate(i);l.appendChild(b);});}
         function selectTemplate(i){if(isEditMode){if(!confirm('放棄修改？'))return;cancelEditMode();}selectedTemplateIndex=i;const t=data.promptTemplates[i];document.getElementById('promptText').value=t.content;hideRenamePanel();renderTemplateList();}
+        function copyPrompt(){const t=document.getElementById('promptText').value;if(!t.trim()){showToast('Prompt 為空','error');return;}navigator.clipboard.writeText(t).then(()=>showToast('已複製 Prompt')).catch(()=>showToast('複製失敗','error'));}
         function enableEditMode(){isEditMode=true;originalContent=document.getElementById('promptText').value;document.getElementById('promptText').removeAttribute('readonly');document.getElementById('btnEditTemplate').style.display='none';document.getElementById('btnSaveTemplate').style.display='';document.getElementById('btnCancelEdit').style.display='';document.getElementById('editModeHint').classList.add('show');document.getElementById('promptText').focus();}
         function cancelEditMode(){isEditMode=false;document.getElementById('promptText').value=originalContent;document.getElementById('promptText').setAttribute('readonly','');document.getElementById('btnEditTemplate').style.display='';document.getElementById('btnSaveTemplate').style.display='none';document.getElementById('btnCancelEdit').style.display='none';document.getElementById('editModeHint').classList.remove('show');}
         function saveTemplateContent(){const n=data.promptTemplates[selectedTemplateIndex].name;data.promptTemplates[selectedTemplateIndex]={name:n,content:document.getElementById('promptText').value};isEditMode=false;document.getElementById('promptText').setAttribute('readonly','');document.getElementById('btnEditTemplate').style.display='';document.getElementById('btnSaveTemplate').style.display='none';document.getElementById('btnCancelEdit').style.display='none';document.getElementById('editModeHint').classList.remove('show');renderTemplateList();saveData();markDataChanged();showToast('已儲存');}
@@ -759,25 +1081,25 @@ topics：討論議題，從以下選填一或多項：["影像討論","病理討
         function checkCustomMarker(){const sel=document.getElementById('markerType');const cust=document.getElementById('markerCustom');if(sel.value==='_custom'){cust.style.display='';cust.focus();}else{cust.style.display='none';cust.value='';}}
         function startMarkerEdit(i){markerEditIndex=i;document.getElementById('markerEditor').classList.add('active');document.getElementById('markerDateError').classList.remove('show');document.getElementById('markerDate').classList.remove('error');if(i!==null&&data.tumorMarkers[i]){const m=data.tumorMarkers[i];const sel=document.getElementById('markerType');const opts=[...sel.options].map(o=>o.value);if(opts.includes(m.type)){sel.value=m.type;document.getElementById('markerCustom').style.display='none';}else{sel.value='_custom';document.getElementById('markerCustom').style.display='';document.getElementById('markerCustom').value=m.type;}document.getElementById('markerDate').value=m.date;document.getElementById('markerValue').value=m.value;}else{document.getElementById('markerType').value='PSA';document.getElementById('markerCustom').style.display='none';document.getElementById('markerCustom').value='';document.getElementById('markerDate').value='';document.getElementById('markerValue').value='';}document.getElementById('markerDate').focus();}
         function doSaveMarker(){const dateEl=document.getElementById('markerDate');const sel=document.getElementById('markerType');let tp=sel.value==='_custom'?document.getElementById('markerCustom').value.trim():sel.value;const d=dateEl.value,v=document.getElementById('markerValue').value.trim();if(!tp)return{ok:false,msg:'請選擇或輸入指數名稱'};if(!d)return{ok:false,msg:'請輸入日期'};if(!v)return{ok:false,msg:'請輸入數值'};if(!validateDateInput(dateEl))return{ok:false};const nd=normalizeDate(d);const e={type:tp,date:nd,value:v};markerEditIndex===null?data.tumorMarkers.push(e):data.tumorMarkers[markerEditIndex]=e;markerEditIndex=null;renderMarkerTable();saveData();markDataChanged();return{ok:true};}
-        function saveMarkerContinue(){const r=doSaveMarker();if(!r.ok){if(r.msg)showToast(r.msg,'error');return;}document.getElementById('markerDate').value='';document.getElementById('markerValue').value='';document.getElementById('markerDate').focus();showToast('已儲存，繼續輸入');}
+        function saveMarkerContinue(){const r=doSaveMarker();if(!r.ok){if(r.msg)showToast(r.msg,'error');return;}document.getElementById('markerValue').value='';document.getElementById('markerValue').focus();showToast('已儲存，繼續輸入');}
         function saveMarkerDone(){const r=doSaveMarker();if(!r.ok){if(r.msg)showToast(r.msg,'error');return;}cancelMarkerEdit();showToast('已儲存');}
         function cancelMarkerEdit(){document.getElementById('markerEditor').classList.remove('active');markerEditIndex=null;}
         function deleteMarker(i){if(confirm('確定刪除？')){data.tumorMarkers.splice(i,1);renderMarkerTable();saveData();markDataChanged();showToast('已刪除');}}
-        function clearAllMarkers(){if(!data.tumorMarkers.length)return;if(confirm('確定清空？')){data.tumorMarkers=[];renderMarkerTable();saveData();markDataChanged();showToast('已清空');}}
+        function clearAllMarkers(){if(!data.tumorMarkers.length)return;if(confirm('確定清除？')){data.tumorMarkers=[];renderMarkerTable();saveData();markDataChanged();showToast('已清除');}}
 
         function renderPathologyTable(){const tb=document.getElementById('pathologyTableBody');data.pathology.sort((a,b)=>a.date.localeCompare(b.date));if(!data.pathology.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.pathology.map((p,i)=>`<tr><td>${p.date}</td><td>${p.category||'Biopsy'}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startPathologyEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deletePathology(${i})">${icons.trash}</button></td></tr>`).join('');}
-        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');document.getElementById('pathologyDateError').classList.remove('show');document.getElementById('pathologyDate').classList.remove('error');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;}document.getElementById('pathologyDate').focus();}
-        function savePathology(){const dateEl=document.getElementById('pathologyDate');const d=dateEl.value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked;if(!d||!t)return showToast('日期與內容必填','error');if(!catB&&!catP)return showToast('請選擇分類','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();markDataChanged();showToast('已儲存');}
+        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');document.getElementById('pathologyDateError').classList.remove('show');document.getElementById('pathologyDate').classList.remove('error');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');document.getElementById('pathCatMolecular').checked=cats.includes('分子檢測');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;document.getElementById('pathCatMolecular').checked=false;}document.getElementById('pathologyDate').focus();}
+        function savePathology(){const dateEl=document.getElementById('pathologyDate');const d=dateEl.value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked,catM=document.getElementById('pathCatMolecular').checked;if(!d||!t)return showToast('日期與內容必填','error');if(!catB&&!catP&&!catM)return showToast('請選擇分類','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');if(catM)cats.push('分子檢測');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();markDataChanged();showToast('已儲存');}
         function cancelPathologyEdit(){document.getElementById('pathologyEditor').classList.remove('active');pathologyEditIndex=null;}
         function deletePathology(i){if(confirm('確定刪除？')){data.pathology.splice(i,1);renderPathologyTable();saveData();markDataChanged();showToast('已刪除');}}
-        function clearAllPathology(){if(!data.pathology.length)return;if(confirm('確定清空？')){data.pathology=[];renderPathologyTable();saveData();markDataChanged();showToast('已清空');}}
+        function clearAllPathology(){if(!data.pathology.length)return;if(confirm('確定清除？')){data.pathology=[];renderPathologyTable();saveData();markDataChanged();showToast('已清除');}}
         
-        function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
+        function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
         function startImagingEdit(i){imagingEditIndex=i;document.getElementById('imagingEditor').classList.add('active');document.getElementById('imagingDateError').classList.remove('show');document.getElementById('imagingDate').classList.remove('error');if(i!==null&&data.imaging[i]){document.getElementById('imagingType').value=data.imaging[i].type;document.getElementById('imagingDate').value=data.imaging[i].date;document.getElementById('imagingContent').value=data.imaging[i].text;}else{document.getElementById('imagingType').value='CT';document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';}document.getElementById('imagingDate').focus();}
         function saveImaging(){const dateEl=document.getElementById('imagingDate');const tp=document.getElementById('imagingType').value,d=dateEl.value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t)return showToast('所有欄位必填','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;cancelImagingEdit();renderImagingTable();saveData();markDataChanged();showToast('已儲存');}
         function cancelImagingEdit(){document.getElementById('imagingEditor').classList.remove('active');imagingEditIndex=null;}
         function deleteImaging(i){if(confirm('確定刪除？')){data.imaging.splice(i,1);renderImagingTable();saveData();markDataChanged();showToast('已刪除');}}
-        function clearAllImaging(){if(!data.imaging.length)return;if(confirm('確定清空？')){data.imaging=[];renderImagingTable();saveData();markDataChanged();showToast('已清空');}}
+        function clearAllImaging(){if(!data.imaging.length)return;if(confirm('確定清除？')){data.imaging=[];renderImagingTable();saveData();markDataChanged();showToast('已清除');}}
         
         function generatePreview(){updateDataFromUI();let p=[];if(data.includePrompt&&data.promptText.trim()){p.push(data.promptText.trim());p.push('─'.repeat(30));}const hp=data.patientName||data.patientAge||data.patientMRN||data.ecog||data.cfs;if(hp){p.push('【病人資料】');if(data.patientMRN)p.push(`病歷號：${data.patientMRN}`);if(data.patientName)p.push(`姓名：${data.patientName}`);if(data.patientAge)p.push(`年齡：${data.patientAge} 歲`);if(data.ecog)p.push(`ECOG: ${data.ecog}`);if(data.cfs)p.push(`衰弱量表: ${data.cfs}${FRAILTY_DESC[data.cfs]?`（${FRAILTY_DESC[data.cfs]}）`:''}`);p.push('─'.repeat(30));}if(data.medicalSummary.trim()){p.push('【病摘】');p.push(data.medicalSummary.trim());p.push('─'.repeat(30));}if(data.labData.trim()||data.tumorMarkers.length){p.push('【檢驗資料】');if(data.labData.trim())p.push(data.labData.trim());if(data.tumorMarkers.length){if(data.labData.trim())p.push('');p.push('腫瘤指數：');const grouped={};data.tumorMarkers.forEach(m=>{if(!grouped[m.type])grouped[m.type]=[];grouped[m.type].push(m);});Object.keys(grouped).sort().forEach(type=>{const items=grouped[type].sort((a,b)=>a.date.localeCompare(b.date));const vals=items.map(m=>`${m.date}: ${m.value}`).join(' → ');p.push(`  ${type}: ${vals}`);});}p.push('─'.repeat(30));}if(data.pathology.length){p.push('【病理報告】');data.pathology.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Category: ${x.category||'Biopsy'}`);p.push('Content:');p.push(x.text.trim());});p.push('─'.repeat(15));}if(data.imaging.length){p.push('【影像報告】');data.imaging.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Type: ${x.type}`);p.push('Content:');p.push(x.text.trim());});p.push('─'.repeat(15));}let result=p.join('\n').trim();result=result.replace(/\n{3,}/g,'\n\n');return result;}
         function refreshPreview(){let pv=generatePreview();const mk=document.getElementById('maskInfo').checked;if(mk&&data.patientName){const m=getMaskedInfo();pv=pv.replaceAll(data.patientName,m.name);}data.previewText=pv;document.getElementById('previewText').value=pv;dataChanged=false;document.getElementById('previewNotice').className='preview-notice';document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>預覽已更新';saveData();showToast('已產生預覽');}
@@ -803,7 +1125,7 @@ topics：討論議題，從以下選填一或多項：["影像討論","病理討
             if(s)try{data={...data,...JSON.parse(s)};}catch(e){}
         }
         function clearField(id){document.getElementById(id).value='';saveData();markDataChanged();showToast('已清除');}
-        function clearPatientTab(){['patientName','patientMRN','patientAge'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');document.getElementById('maskInfo').checked=false;saveData();markDataChanged();updatePatientInfoBar();showToast('已清除');}
+        function clearPatientTab(){['patientName','patientMRN','patientAge'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');saveData();markDataChanged();updatePatientInfoBar();showToast('已清除');}
         function clearAll(){if(!confirm('清除所有資料？（保留範本）'))return;const t=data.promptTemplates;data={promptText:'',includePrompt:true,promptTemplates:t,patientName:'',patientAge:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',tumorMarkers:[],pathology:[],imaging:[],previewText:''};applyDataToUI();renderMarkerTable();renderPathologyTable();renderImagingTable();saveData();dataChanged=false;document.getElementById('previewNotice').className='preview-notice';document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>按「產生預覽」整合各頁資料';updatePatientInfoBar();showToast('已清除');}
         
         function updatePatientInfoBar(){
@@ -872,14 +1194,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V6.12.1</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.5</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V6.12.1</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.5</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
