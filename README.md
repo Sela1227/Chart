@@ -30,7 +30,7 @@
 
 ## 版本歷程
 
-### V7.0.4 (2026-05-08)
+### V7.0.7 (2026-05-08)
 **首次對齊 SELA-Starter-Kit V1.8.2：**
 - 換上 SELA favicon 套組（高清）
 - 新增 .gitignore
@@ -94,4 +94,4 @@
 
 © SELA · Radiation Oncology · CBSHOW
 
-Made by SELA · V7.0.4
+Made by SELA · V7.0.7
