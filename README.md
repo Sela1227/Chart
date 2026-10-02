@@ -30,6 +30,28 @@
 
 ## 版本歷程
 
+### V7.0.9 (2026-10-02)
+**預設範本 1「放腫病歷整理」改版（結構重整）：**
+- 改為「輸出骨架 + 各節規則 + 輸出前自我檢查」結構
+- 不可自行推導 TNM；來源矛盾時依規則選擇或兩筆並列
+- 新增【PET/CT】專節（FINDINGS/IMPRESSION 配對、DDx 含惡性者保留、SUVmax 兩值保留）與範例
+- 分子形態演變總覽 Subtype 限四類（HR+/HER2-、HR+/HER2+、HR-/HER2+、TNBC）
+- 治療計畫只記已執行或已決定的治療；no distant mets 不可擴大解釋
+- 日期統一 YYYY/MM/DD
+
+---
+
+### V7.0.8 (2026-10-02)
+**預設範本 1「放腫病歷整理」更新：**
+- cTNM / pTNM 獨立欄位，有手術者兩者並列；新增【分期】規則
+- 診斷句新增非乳癌有手術、術前治療格式；乳癌切片與手術檢體病理不一致時分開寫
+- Present Illness 寫到病理診斷為止
+- Social History 改為 Smoking(-) Alcohol(-) Betel nut(-) 格式，未記載時輸出兩行
+- 乳癌 Gynecologic / Breast History 固定六項（含 Breastfeeding）
+- 影像：疑似惡性發現與 imaging staging 不可刪除
+
+---
+
 ### V7.0.7 (2026-05-08)
 **首次對齊 SELA-Starter-Kit V1.8.2：**
 - 換上 SELA favicon 套組（高清）
@@ -94,4 +116,4 @@
 
 © SELA · Radiation Oncology · CBSHOW
 
-Made by SELA · V7.0.7
+Made by SELA · V7.0.9

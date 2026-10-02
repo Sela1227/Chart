@@ -3,13 +3,13 @@
   病歷整理器 (Chart) - 放射腫瘤科病歷結構化整理工具
   功能：病歷整理 / AI 摘要 / 多格式匯出
   Made by SELA · Radiation Oncology · CBSHOW
-  Version: V7.0.7
+  Version: V7.0.9
 -->
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V7.0.7</title>
+    <title>病歷整理器 V7.0.9</title>
     <meta name="theme-color" content="#F36825">
     <!-- SELA Favicon Set -->
     <link rel="icon" type="image/svg+xml" href="favicon/sela.svg">
@@ -178,7 +178,7 @@
             <div class="header-left">
                 <img src="favicon/sela.svg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V7.0.7</h1>
+                    <h1>病歷整理器 V7.0.9</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
@@ -613,93 +613,84 @@
         const PRESET_TEMPLATES = [
             {
                 name: '放腫病歷整理',
-                content: `你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成結構化的臨床摘要。
+                content: `你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成可直接貼入病歷系統的結構化臨床摘要。
 
 ================================================================
 核心原則（最高優先）
 ================================================================
-1. 只能使用貼上的資料，絕對不可自行推斷、補充、或引用任何外部醫學知識與記憶
-2. 資料不足時，直接留空，不填任何文字
-3. 良性、退化性、偶發性無關病灶不需提及，只保留與主診斷相關的陽性發現
-4. 病人腫瘤分子形態可能會隨時間改變，必須依時序分別記錄各次切片的分子分型
+1. 只能使用貼上的資料，不可自行推斷、補充或引用外部醫學知識。例外只有兩處：AI 建議參考、分子形態演變總覽的 Subtype 欄。
+2. 未記載的資料直接留空，不寫 unknown、N/A、not mentioned 等文字。例外只有 Social History（見該節規則）。
+3. 良性、退化性、偶發且與腫瘤無關的發現省略。
+4. 原文任何疑似惡性的發現（原發、復發、殘存、轉移、第二原發），不論是否與主診斷相關，都必須保留；可以精簡，不可刪除，也不可改寫成確診。
+5. 不可自行推導 TNM。cTNM、ycTNM、pTNM、ypTNM 只在原文明確記載時填入，不可由腫瘤大小、LN 數量、影像描述或病理結果自行推算。
+6. cTNM 與 pTNM/ypTNM 是兩個獨立資訊。有手術者，原文有記載 cTNM 就必須保留，不得因為有 pTNM 而省略；任一個原文未記載時直接留空，不得自行補足。
+7. 多次病理檢體依時間分開記錄，不可把不同時間點的 histology、Grade、IHC 或分子標記混在一起，也不可把後來的檢體結果套用到較早的檢體。
+8. 不同來源內容矛盾時，不自行判斷哪一筆較合理：該節有時間規則者依規則選擇（例如【分期】）；沒有規則者兩筆並列並附日期。
 
 ================================================================
-格式規則（重要）
+格式規則
 ================================================================
-- 不使用粗體（不要用 ** 或 __ 包圍文字）
-- 不使用 emoji
-- 不使用多層縮排，保持扁平結構
-- 段落內項目用 # 開頭，不用 - 開頭
-- 章節標題用文字加底線 --- 分隔，不用 ## 標題格式
-- 輸出要能直接貼到病歷系統，避免特殊格式符號
+- 英文書寫，章節標題保留中文
+- 不使用粗體、emoji、Markdown 標題、多層縮排
+- 章節之間以 --- 分隔
+- 各項以 # 開頭（AI 建議參考一節用 - 開頭）
+- 民國年轉為西元年；完整日期統一為 YYYY/MM/DD，原文只有年月或年份者照原文精度，不自行補日期
+- 簡潔，以門診快速閱讀為原則
+- 同一章節內不重複相同資訊；跨章節必要的重複不可省略（例如 cTNM 同時出現在診斷、影像檢查、治療計畫）
 
 ================================================================
-輸出格式
+輸出骨架（照此順序與標籤輸出）
 ================================================================
+全形括號（）內為說明文字，不輸出。
 
 診斷
-依腫瘤類型選擇適當格式：
-
-乳癌格式（IHC 依時序分開列出，不用箭頭合併）：
-[Grade] [病理類型] of breast, [位置L/X'/Xcm], [切片IHC], s/p [手術] (日期), [pTNM/ypTNM] [Stage], [手術檢體IHC], [margins], [LVI/PNI], [LN狀態], [treatment effect 若有]; for [治療意圖]
-
-乳癌範例：
-Grade 2 invasive ductal carcinoma of breast, R/12'/2 cm, ER(100%)PR(40%)HER2(0)Ki-67(15%), s/p neoadjuvant hormone therapy then right partial mastectomy + SNBx (2026-07-06), ypT1aN0 Stage IA, ER(95%)PR(30%)HER2(0)Ki-67(5%), margins free (closest 5 mm basal), LVI(-), PNI(+), SN 0/1, treatment effect Modified Ryan score 2/3 (partial response); for adjuvant RT evaluation.
-
-若只有一次切片（無手術或無術前切片），則只列出該次 IHC，不需重複。
-
-非乳癌、無手術的診斷格式（例如食道癌、頭頸癌等）：
-[分化程度] [病理類型] of [器官], [位置/解剖描述], [cTNM], [主要 LN 及轉移部位簡述]; for [治療意圖]
-
-非乳癌範例：
-Moderately differentiated squamous cell carcinoma of esophagus, middle-to-lower third (28-33 cm from incisor), cT3N1M1, with celiac LN metastases and para-aortic LN (L3, distant metastasis); for palliative treatment evaluation.
-
+（一句話，格式見【診斷】）
 ---
 病史
-#Present Illness: 2-3句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。診斷後才執行的治療省略不寫。
-#Past Medical History: 只列疾病或手術名稱，以逗號分隔。有寫 nil 即有問標示 Nil。若有 DM(-)/HTN(-) 等陰性項目應保留。
-#Family History: 有寫 nil 即有問標示 Nil。
-#Social History: Smoking: X / Alcohol: X / Betel nut: X
-#Gynecologic / Breast History:（僅乳癌或婦癌）
-Menarche / Menopause / Parity / Hormone therapy / Prior surgery 各項列出；其他癌別完全省略此欄
+#Present Illness:
+#Past Medical History:
+#Family History:
+#Social History:
+（以下 Gynecologic / Breast History 共七行，僅乳癌或婦癌輸出，其他癌別整段省略）
+#Gynecologic / Breast History:
+Menarche:
+Menopause:
+Parity:
+Breastfeeding:
+Hormone therapy:
+Prior surgery:
 #Drug Allergy:
 ---
 理學檢查
 #ECOG:
 #Body weight:
-#Physical Examination: 只寫異常發現；若全部正常則寫 general condition ok
+#Physical Examination:
 ---
 癌指數
-#指標名稱: 數值 (日期) -> 數值 (日期)
-若無資料則留空
-
+#Marker: value (date) -> value (date)
 ---
 病理檢查
-#Biopsy (日期): 部位 — 病理診斷，Grade。IHC 直接列出（有百分比寫 ER(>90%)，無百分比寫 HER2(2+)）。FISH 結果。
-#Surgery (日期): 部位 — 病理診斷，Grade，腫瘤大小。LVI/PNI/EIC。Margins 狀態。LN 狀態。Stage: pTNM。
-若有多次切片且分子形態可能變化（乳癌等），末尾加上：
+#Biopsy (date): site — diagnosis, Grade, IHC, FISH/molecular result.
+#Surgery (date): site — diagnosis, Grade, tumor size, LVI/PNI/EIC, margin, LN status, Stage: pTNM/ypTNM.
+（以下表格僅在至少兩個不同時間點的檢體具有 ER/PR/HER2/Ki-67 資料時輸出，否則整段省略）
 分子形態演變總覽
 | 時間點 | ER | PR | HER2 | Ki-67 | Subtype |
 |---|---|---|---|---|---|
-依時序填入各次切片資料。
 ---
 影像檢查
-每份報告一行，以 #影像類型(日期): 開頭。良性、退化、無關病灶略去。
-
+#Imaging type (date): findings.
 ---
 治療計畫
-Initial course (年)
-cTNM -> pTNM（若有手術則填入）
-- Surgery: 術式 (日期)
-- RT: 起訖日期，劑量/分次
-- Chemotherapy: 藥物、劑量、日期
-- Hormone therapy: 藥物 (起始日期)
-- Other: 說明
-
+Initial course (year)
+#Stage: cTNM -> pTNM / ypTNM
+#Surgery: procedure (date)
+#RT: date range, total dose/fractions
+#Chemotherapy: regimen, dose, date
+#Hormone therapy: drug (start date)
+#Other:
 ---
 AI 建議參考（非病歷內容，僅供醫師參考）
 > 不代表實際醫囑，最終決策請由主治醫師判斷。
-
 - RT role:
 - Systemic therapy:
 - Suggested workup:
@@ -707,46 +698,150 @@ AI 建議參考（非病歷內容，僅供醫師參考）
 - Follow-up:
 
 ================================================================
-書寫規則
+各節規則
 ================================================================
 
-【格式】
-- 不用粗體、不用 emoji、不用多層縮排
-- 項目用 # 開頭
-- IHC 有百分比者直接寫 ER(>90%)，無百分比者寫 HER2(2+)
-- 英文書寫，章節標題保留中文
-- 民國年自動轉換為西元年
-- 資料不足時直接留空，不填任何說明文字
+【診斷】
+寫成一句話，依腫瘤類型選用格式。
 
-【診斷句】
-- 乳癌：位置用 L/2'/6 格式；切片 IHC 放在手術前，手術檢體 IHC 放在 pTNM 之後，兩組分開列出，不用箭頭合併
-- 非乳癌無手術者：用 [分化程度] [病理類型] of [器官], [位置], [cTNM], [LN/mets 簡述] 格式
-- 簡潔，一句話完成
+乳癌：
+[Grade] [histology] of breast, [位置 L/X'/Xcm], [IHC], [cTNM], s/p [surgery] (date), [pTNM/ypTNM], [margin/LVI/PNI], [LN status]; for [RT intent].
+
+乳癌，術前切片與手術檢體的 histology、Grade、IHC 任一項不同時，術前寫一次、術後再寫一次：
+[biopsy Grade] [biopsy histology] of breast, [位置 L/X'/Xcm], [biopsy IHC], [cTNM], s/p [surgery] (date), [surgical Grade] [surgical histology], [surgical IHC], [pTNM/ypTNM], [margin/LVI/PNI], [LN status]; for [RT intent].
+
+非乳癌、有手術：
+[differentiation] [histology] of [organ], [site], [cTNM], s/p [surgery] (date), [pTNM/ypTNM], [margin/LVI/PNI], [LN status]; for [treatment intent].
+
+非乳癌、無手術：
+[differentiation] [histology] of [organ], [site], [cTNM], [major malignant LN / metastatic sites]; for [treatment intent].
+
+有術前治療者依時序呈現：
+[cTNM], s/p neoadjuvant [treatment], s/p [surgery] (date), [ypTNM].
+
+範例（食道癌）：
+Moderately differentiated squamous cell carcinoma of esophagus, middle-to-lower third (28–33 cm from incisor), cT3N1M1, with celiac LN metastases and para-aortic LN (L3, distant metastasis); for palliative treatment evaluation.
+
+- 乳癌位置一律用 L/2'/6cm、R/10'/3cm 這種簡寫，不展開成文字
+- IHC 直接列出數值
+- cTNM 寫在 s/p [surgery] 之前，pTNM/ypTNM 寫在之後
+- 原文未記載的成分直接省略，不留下多餘的逗號或空欄
+- 乳癌切片與手術檢體完全相同時，histology、Grade、IHC 只在 cTNM 之前寫一次
+- 乳癌切片與手術檢體不同時，不可合併成一組，也不可只留其中一次
+
+【分期】
+- cTNM 來源：手術或治療開始日期之前的影像報告 staging、門診/住院病歷、MDT 紀錄中明寫的 clinical stage，照原文抄錄
+- 多筆記載不一致時，採用最接近手術日或首次治療開始日的一筆
+- 有術前治療者：治療前為 cTNM，術後病理為 ypTNM；術前治療後的再分期原文有寫才填 ycTNM
+- 原文未明寫時留空
 
 【病史】
-- Past Medical History 只列疾病名稱，以逗號分隔，不分行
-- 若有陰性項目如 DM(-)/HTN(-)，代表有問過，應保留
-- 資料不足直接留空
+- Present Illness：2–3 句，只寫主訴或發現病灶的原因、病理診斷之前的關鍵診斷過程、切片結果、轉介緣由。病理診斷之後的檢查（staging workup、影像、抽血）與治療都不寫在這裡，放在影像檢查、癌指數、治療計畫各節
+- Past Medical History：只列疾病或手術名稱，以逗號分隔，不分行。原文有寫 nil 則標示 Nil。DM(-)、HTN(-) 等明確陰性紀錄代表有問過，必須保留
+- Family History：依原文記載；原文有寫 nil 則標示 Nil
+- Gynecologic / Breast History：六個標籤固定全部列出，每項一行；原文沒有的項目，標籤後留空。Breastfeeding 只依原文填寫，不可由 Parity 推斷
 
-【病理】
-- 每次切片獨立一行
-- 手術檢體需附 pTNM
-- Subtype 名稱只在「分子形態演變總覽」表格出現
-- 無資料欄位直接略去
+【Social History】
+- 原文明確記載都沒有：
+#Social History: Smoking(-) Alcohol(-) Betel nut(-)
+- 原文記載有使用：照原文寫量與年數，例如
+#Social History: Smoking(+) 1 PPD for 20 yr, Alcohol(-) Betel nut(-)
+- 已戒者原文有寫才加註
+- 原文未記載或不確定：輸出以下兩行，由醫師問診後刪除其中一行
+#Social History: Smoking(-) Alcohol(-) Betel nut(-)
+#Social History: Smoking(+) ( ) PPD for ( ) yr, Alcohol( ) Betel nut( )
+- 只有部分項目有記載：仍輸出兩行，已記載的項目在兩行都照原文寫
+- 半形括號空格原樣輸出，不可自行填入數值
 
-【影像】
-- 簡潔，每份一行
-- 不需要獨立 Summary 行，重點整合在描述內
+【理學檢查】
+- Body weight 採此次就診或原文最新的一筆
+- Physical Examination 只寫異常發現；原文明確記載檢查正常時寫 general condition ok，不可因為沒有異常紀錄就自行寫正常
 
-【AI建議】
-- 用 > 引言開頭說明非正式醫囑
-- 各項用 - 開頭
-- 可中英混用，可引用醫學知識
+【癌指數】
+- 只列與目前腫瘤相關的 marker，同一 marker 依時序排列，不同 marker 分行
+- 無資料時保留章節標題，內容留空
+
+【病理檢查】
+- 每次檢體獨立一行，依日期排序
+- IHC 有百分比寫 ER(>90%)、PR(80%)；無百分比寫 HER2(2+)
+- 只寫原文有記載的項目，無資料的項目直接略去
+- 手術檢體的 pTNM 原文明確記載才填，有術前治療者寫 ypTNM
+- 分子形態演變總覽每一列只能用該次檢體自己的資料，不可用其他時間點的 IHC 補值
+- Subtype 只用以下四類：HR+/HER2-、HR+/HER2+、HR-/HER2+、TNBC
+- HR+：ER 或 PR 任一 ≥1%，或原文記為 positive
+- HER2+：IHC 3+，或 FISH/ISH amplified。HER2-：IHC 0、1+，或 2+ 且 FISH/ISH not amplified
+- HER2 2+ 而無 FISH/ISH 結果，或資料不足以分類時，Subtype 留空
+- 不使用 Luminal A/B、HER2-enriched 等名稱；Subtype 只出現在這個表格，不寫進診斷句或其他章節
+
+【影像檢查】
+- 每份報告一行，依日期排序；行長不限，不可為了縮短而刪除疑似惡性的發現
+- 只保留與癌症相關的重要異常，良性、退化、無關偶發病灶略去
+- 原文凡出現 suspicious、suspected、cannot exclude、r/o、probable、likely、favor、compatible with、indeterminate 等字眼，且對象為 malignancy、tumor、metastasis、recurrence、residual disease、progression 者，可精簡用字，但必須保留病灶位置、原文有寫的大小，以及原文的不確定語氣
+- 判讀的第一順位是 inflammation、reactive 等良性原因，但 DDx 列有惡性可能者，視為疑似惡性，病灶與 DDx 都要保留
+- 其他器官的疑似惡性病灶或第二原發也要保留
+- 報告原文明載的 imaging staging（cT/cN/cM）必須保留在該行末尾，不可因為診斷一節已有分期而刪除；staging 寫在 SUGGESTIONS 或 RECOMMENDATION 段落者同樣要保留
+- 原文對全身遠端轉移作出明確陰性結論時，才濃縮為 no distant mets
+- 原文只說特定器官沒有轉移時，照原文範圍寫（例如 no liver or bone mets），不可擴大成 no distant mets
+- 不另外產生 Summary 行
+
+【PET/CT】
+PET/CT 報告仍是一份一行，依以下步驟產生。
+1. 配對：把 FINDINGS 的每個病灶與 IMPRESSION 中對應的判讀以部位配成一組。一個病灶只寫一次，位置、大小、SUVmax 取自 FINDINGS，判讀與 DDx 取自 IMPRESSION
+2. 保留，符合任一項即保留：原發腫瘤；判讀或 DDx 出現 malignancy、cancer、neoplasm、tumor、metastasis、recurrence、residual、lymphoma 任一字眼，即使第一判讀是 inflammation 或 reactive；FDG-avid 病灶但 IMPRESSION 沒有對它下判讀
+3. 刪除：negative、others: negative、physiologic FDG activity；判讀只有 inflammation / degenerative / benign 且 DDx 完全沒有惡性字眼的病灶；HISTORY、PROCEDURES、致謝語、clinical correlation 與 follow-up 建議
+4. 每個保留病灶的寫法：[site/location] [size], SUVmax [early] -> [delayed], [判讀], DDx [原文 DDx]
+5. 原文沒有的欄位略去；SUVmax 兩個數值都保留；沒有攝取寫 no FDG uptake；DDx 照原文全列，不可只留第一個（etc. 可省略）；同器官且判讀相同的多個病灶才合併
+6. 病灶之間以分號分隔，順序：原發灶 -> regional LN -> distant mets -> 其他疑似惡性病灶 -> 遠端轉移的陰性結論 -> staging
+7. 原文任何位置（包含 SUGGESTIONS）出現的 TNM 照抄並附版本，放在行尾
+
+範例（僅示範寫法，內容不是本病人的資料，不可引用）
+原文節錄：
+FINDINGS:
+2. Chest: (1) multiple tiny nodules with no FDG uptake in both lungs; (2) a small FDG-avid lesion (SUVmax: 1.9 -> 2.1), about 1.0 cm, in 9' position of right breast; (3) others: negative
+3. Abdomen and Pelvis: (1) a wall-thickening lesion with high FDG uptake (SUVmax: 13.0 -> 16.2) in cecal area; (2) multiple nodules with background to mild FDG uptake (SUVmax: 1.6 -> 1.9) in peri-tumoral area; (3) others: negative
+4. Musculoskeletal: (1) a mildly FDG-avid lesion (SUVmax: 3.0 -> 3.6) in left shoulder area; (2) others: negative
+IMPRESSION:
+1. Compatible with a highly metabolic active malignancy in cecum.
+2. Regional LN metastases are suspected for the multiple nodules in peri-tumoral areas, DDx: reactive LNs.
+3. Inflammation is suspected for the mildly hypermetabolic lesion in 9' position of right breast, DDx: benign neoplasm, breast cancer, metastasis, etc.
+4. Inflammatory nodules are suspected for the multiple tiny nodules in both lungs, DDx: metastasis.
+5. Inflammation is considered for the hypermetabolic lesion in left shoulder area.
+6. No other definitely hypermetabolic lesion of suggesting distant metastasis is noted in liver, bone or elsewhere.
+SUGGESTIONS:
+1. Further clinical correlation and regular follow-up are recommended to ascertain the nature of aforementioned lesions.
+2. TNM staging for Colorectal cancer (AJCC 8th edition): cT3N2M0
+輸出：
+#PET/CT (date): Cecum wall thickening, SUVmax 13.0 -> 16.2, compatible with malignancy; peri-tumoral multiple nodules, SUVmax 1.6 -> 1.9, regional LN mets suspected, DDx reactive LNs; R breast 9' 1.0 cm, SUVmax 1.9 -> 2.1, inflammation suspected, DDx benign neoplasm, breast cancer, metastasis; bil. tiny lung nodules, no FDG uptake, inflammatory nodules suspected, DDx metastasis; no distant mets; cT3N2M0 (AJCC 8th).
+說明：左肩病灶的判讀只有 inflammation、沒有惡性 DDx，所以刪除；右乳與肺結節的 DDx 含惡性，所以保留；IMPRESSION 第 6 條寫 liver, bone or elsewhere，是全身性的陰性結論，所以寫 no distant mets。
+
+【治療計畫】
+- 只記錄已實際執行的治療，以及原文明確寫為 planned、scheduled、arranged 或已決定的治療
+- 原文只是討論或考慮的治療（consider、may receive、option、待評估）不寫入本節
+- 不可依病情自行推測應做什麼治療
+- Stage：cTNM 原文有記載就填；pTNM/ypTNM 只在有手術且原文明載時填；沒有後者時只寫 cTNM，不留箭頭
+- Other：targeted therapy、immunotherapy 等其他原文記載的抗癌治療
+- 沒有資料的項目，標籤保留、內容留空
+
+【AI 建議參考】
+- 可使用一般醫學知識，可中英混用
+- 每項 1–2 句，只回答與目前放射腫瘤科門診決策直接相關的內容，不寫教科書式說明
+- 本節的推論不可回填到前面的病歷內容
 
 ================================================================
-輸入病歷資料：
+輸出前自我檢查（只檢查，不輸出檢查過程或結果）
 ================================================================
-[貼上原始病摘、檢驗、病理、影像報告]`
+1. 原文有記載的 cTNM 沒有漏掉；沒有自行推導任何 TNM
+2. 原文疑似惡性的影像發現（包含只出現在 DDx 的惡性可能）沒有被刪除，也沒有被改寫成確診
+3. PET/CT 的 IMPRESSION 每一條所提到的每個病灶，都已寫入或符合刪除條件；SUVmax 與原文一致
+4. 不同時間點的病理沒有混用
+5. 沒有加入原文不存在的病史、檢查或治療
+6. 沒有把只是討論或考慮的治療寫成已決定
+7. 沒有把特定器官無轉移擴大寫成 no distant mets
+
+================================================================
+輸入病歷資料
+================================================================
+[貼上原始病摘、門診紀錄、病理、影像、檢驗與治療資料]`
             },
             {
                 name: '多專科會議 JSON',
@@ -1199,14 +1294,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.7</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.9</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.7</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.9</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
