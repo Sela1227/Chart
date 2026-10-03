@@ -3,13 +3,13 @@
   病歷整理器 (Chart) - 放射腫瘤科病歷結構化整理工具
   功能：病歷整理 / AI 摘要 / 多格式匯出
   Made by SELA · Radiation Oncology · CBSHOW
-  Version: V7.0.6
+  Version: V7.1.0
 -->
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病歷整理器 V7.0.6</title>
+    <title>病歷整理器 V7.1.0</title>
     <meta name="theme-color" content="#F36825">
     <!-- SELA Favicon Set -->
     <link rel="icon" type="image/svg+xml" href="favicon/sela.svg">
@@ -159,6 +159,36 @@
         .patient-info-bar .copy-btn { background: transparent; border: none; color: #94A3B8; cursor: pointer; padding: 2px 4px; border-radius: 3px; display: inline-flex; align-items: center; transition: all 0.2s; }
         .patient-info-bar .copy-btn:hover { background: rgba(255,255,255,0.1); color: #E2E8F0; }
         .patient-info-bar .copy-btn svg { width: 12px; height: 12px; }
+        /* ===== V7.1.0 整理結果頁 / 列表 / 選單 ===== */
+        .save-status { font-size: 0.65rem; color: var(--text-muted); margin-right: 10px; white-space: nowrap; }
+        .save-status.error { color: var(--danger); font-weight: 600; }
+        .tab-btn.tab-end { margin-left: auto; }
+        .result-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .result-bar label { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
+        .result-bar select { width: auto; min-width: 160px; max-width: 280px; }
+        .result-bar .ai-status { margin-left: auto; }
+        .result-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+        .result-head h4 { font-size: 0.75rem; font-weight: 600; color: var(--text-primary); }
+        .result-head .btn-group { margin-left: auto; }
+        #aiResultText { min-height: 340px; line-height: 1.6; }
+        #previewText { min-height: 240px; }
+        .raw-section { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border-light); }
+        .raw-toggle { border: none; background: transparent; cursor: pointer; font-family: inherit; font-size: 0.75rem; font-weight: 600; color: var(--text-primary); display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px 3px 2px; border-radius: 4px; }
+        .raw-toggle:hover { background: var(--bg-main); }
+        .raw-toggle .icon { transition: transform 0.15s; }
+        .raw-toggle.open .icon { transform: rotate(90deg); }
+        .mask-state { font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; }
+        .mask-state.off { color: var(--primary); font-weight: 600; }
+        details.menu { position: relative; display: inline-block; }
+        details.menu > summary { list-style: none; }
+        details.menu > summary::-webkit-details-marker { display: none; }
+        .menu-list { position: absolute; top: calc(100% + 3px); right: 0; z-index: 20; background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); padding: 3px; display: flex; flex-direction: column; min-width: 84px; }
+        .menu-list button { border: none; background: transparent; text-align: left; padding: 5px 10px; font-size: 0.7rem; font-family: inherit; color: var(--text-primary); border-radius: 3px; cursor: pointer; }
+        .menu-list button:hover { background: var(--bg-card); }
+        .data-table tr.row-click { cursor: pointer; }
+        .cell-preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; word-break: break-word; }
+        .patient-info-bar .info-counts { margin-left: auto; gap: 6px; }
+        #resultNotice:not(.warning) { background: transparent; padding: 0 2px; }
     </style>
 </head>
 <body>
@@ -178,37 +208,33 @@
             <div class="header-left">
                 <img src="favicon/sela.svg" alt="SELA" class="logo">
                 <div class="header-text">
-                    <h1>病歷整理器 V7.0.6</h1>
+                    <h1>病歷整理器 V7.1.0</h1>
                     <div class="subtitle">彰濱癌症中心 · CBSHOW</div>
                 </div>
             </div>
             <div class="header-right">
+                <span class="save-status" id="saveStatus"></span>
+                <button class="btn btn-outline" onclick="clearAll()" style="margin-right:8px;white-space:nowrap;" title="清除目前病人的輸入資料與 AI 結果，Prompt 範本不受影響"><svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>新病人</button>
                 <button class="settings-btn" onclick="openSettings()" title="設定"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
                 <div style="font-size:0.6rem;color:var(--text-muted);text-align:right;">© SELA<br>Radiation Oncology</div>
             </div>
         </div>
         
         <div class="tabs">
-            <button class="btn btn-outline" onclick="clearAll()" style="color:var(--danger);border-color:var(--danger);padding:5px 8px;margin-right:8px;" title="清除全部資料"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>重填</button>
-            <button class="tab-btn active" data-tab="prompt"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Prompt</button>
-            <button class="tab-btn" data-tab="patient"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>病人</button>
+            <button class="tab-btn active" data-tab="patient"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>病人</button>
             <button class="tab-btn" data-tab="summary"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>病摘</button>
             <button class="tab-btn" data-tab="lab"><svg class="icon" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>檢驗</button>
             <button class="tab-btn" data-tab="pathology"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>病理</button>
             <button class="tab-btn" data-tab="imaging"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>影像</button>
-            <button class="tab-btn" data-tab="preview"><svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>預覽</button>
-            <button class="tab-btn" data-tab="ai"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5z"/></svg>AI</button>
+            <button class="tab-btn" data-tab="result"><svg class="icon" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><polyline points="9 14 11 16 15 12"/></svg>整理結果</button>
+            <button class="tab-btn tab-end" data-tab="prompt" title="管理 Prompt 範本"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Prompt</button>
         </div>
         
         <div class="patient-info-bar" id="patientInfoBar"></div>
         
-        <div class="tab-content active" id="tab-prompt">
+        <div class="tab-content" id="tab-prompt">
             <div class="two-col">
                 <div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="includePrompt" checked>
-                        <label for="includePrompt">輸出時包含 Prompt</label>
-                    </div>
                     <div class="edit-mode-hint" id="editModeHint"><svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>編輯模式：修改後請按儲存</div>
                     <div class="form-group">
                         <label>Prompt 編輯區</label>
@@ -242,7 +268,7 @@
             </div>
         </div>
         
-        <div class="tab-content" id="tab-patient">
+        <div class="tab-content active" id="tab-patient">
             <div class="btn-group" style="margin-bottom:10px;">
                 <div class="checkbox-group" style="margin-bottom:0;"><input type="checkbox" id="maskInfo" checked><label for="maskInfo">遮蔽姓名</label></div>
                 <button class="btn btn-outline" onclick="clearPatientTab()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
@@ -329,14 +355,15 @@
                             <label><input type="checkbox" id="pathCatPathology" onchange="if(this.checked)document.getElementById('pathCatBiopsy').checked=false;"> Pathology</label>
                             <label><input type="checkbox" id="pathCatMolecular"> 分子檢測</label>
                         </div>
-                        <button class="btn btn-success" onclick="savePathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
+                        <button class="btn btn-success" onclick="savePathologyContinue()" title="儲存後直接輸入下一筆（Ctrl+Enter）"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存+繼續</button>
+                        <button class="btn btn-primary" onclick="savePathology()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存+完成</button>
                         <button class="btn btn-outline" onclick="cancelPathologyEdit()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
                     </div>
                 </div>
                 <div class="date-error-msg" id="pathologyDateError">日期格式錯誤，請輸入正確日期</div>
                 <textarea id="pathologyContent" rows="4" placeholder="報告內容..." style="margin-top:6px;"></textarea>
             </div>
-            <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:90px;">分類</th><th>內容預覽</th><th style="width:60px;">操作</th></tr></thead><tbody id="pathologyTableBody"></tbody></table></div>
+            <div class="table-container" style="max-height:300px;"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:90px;">分類</th><th>內容預覽</th><th style="width:60px;">操作</th></tr></thead><tbody id="pathologyTableBody"></tbody></table></div>
         </div>
         
         <div class="tab-content" id="tab-imaging">
@@ -352,37 +379,50 @@
                         <select id="imagingType" style="width:110px;"><option>CT</option><option>MRI</option><option>Bone scan</option><option>PET-CT</option><option>Sono</option><option>Breast Sono</option><option>Mammography</option><option>Endoscopy</option><option>Other</option></select>
                         <label>日期</label>
                         <input type="text" id="imagingDate" class="date-input" placeholder="20211227" oninput="formatDateInput(this)" onblur="validateDateInput(this)">
-                        <button class="btn btn-success" onclick="saveImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存</button>
+                        <button class="btn btn-success" onclick="saveImagingContinue()" title="儲存後直接輸入下一筆（Ctrl+Enter）"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存+繼續</button>
+                        <button class="btn btn-primary" onclick="saveImaging()"><svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>儲存+完成</button>
                         <button class="btn btn-outline" onclick="cancelImagingEdit()"><svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>取消</button>
                     </div>
                 </div>
                 <div class="date-error-msg" id="imagingDateError">日期格式錯誤，請輸入正確日期</div>
                 <textarea id="imagingContent" rows="4" placeholder="報告內容..." style="margin-top:6px;"></textarea>
             </div>
-            <div class="table-container"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:90px;">種類</th><th>內容預覽</th><th style="width:60px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
+            <div class="table-container" style="max-height:300px;"><table class="data-table"><thead><tr><th style="width:85px;">日期</th><th style="width:90px;">種類</th><th>內容預覽</th><th style="width:60px;">操作</th></tr></thead><tbody id="imagingTableBody"></tbody></table></div>
         </div>
         
-        <div class="tab-content" id="tab-preview">
-            <div class="preview-notice" id="previewNotice"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>按「產生預覽」整合各頁資料</div>
-            <div style="margin-bottom:10px;" class="btn-group">
-                <button class="btn btn-primary" onclick="refreshPreview()"><svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>產生預覽</button>
-                <button class="btn btn-outline" onclick="copyPreview()"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>複製</button>
+        <div class="tab-content" id="tab-result">
+            <div class="result-bar">
+                <label for="activeTemplate">整理規則</label>
+                <select id="activeTemplate" onchange="selectTemplate(parseInt(this.value))" title="目前使用的 Prompt 範本；要編輯或載入預設請到 Prompt 分頁"></select>
+                <span class="ai-status" id="aiStatus"></span>
             </div>
-            <div class="form-group"><label>預覽輸出</label><textarea id="previewText" placeholder="按上方按鈕產生預覽內容..." readonly></textarea></div>
-        </div>
-        
-        <div class="tab-content" id="tab-ai">
-            <div class="preview-notice" id="aiNotice"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>先在「預覽」產生內容，再按「AI 整理」</div>
-            <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div class="preview-notice" id="resultNotice"></div>
+            <div class="result-head">
+                <h4>AI 整理結果</h4>
                 <div class="btn-group">
                     <button class="btn btn-accent" onclick="aiOrganize()" id="btnAiOrganize"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5z"/></svg>AI 整理</button>
                     <button class="btn btn-outline" onclick="copyAiResult()"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>複製</button>
+                    <details class="menu"><summary class="btn btn-outline"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>匯出</summary><div class="menu-list"><button onclick="doExport('txt','ai',this)">TXT</button><button onclick="doExport('html','ai',this)">HTML</button><button onclick="doExport('pdf','ai',this)">PDF</button></div></details>
                     <button class="btn btn-outline" onclick="clearAiResult()"><svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>清除</button>
                 </div>
-                <span class="ai-status" id="aiStatus"></span>
             </div>
             <div id="aiLoading" style="display:none;margin-bottom:8px;" class="ai-loading"><div class="spinner"></div>AI 處理中...</div>
-            <div class="form-group"><label>AI 整理結果</label><textarea id="aiResultText" placeholder="AI 整理後的內容會顯示在這裡..." readonly></textarea></div>
+            <textarea id="aiResultText" placeholder="AI 整理後的內容會顯示在這裡..." readonly></textarea>
+            <div class="raw-section">
+                <div class="result-head">
+                    <button class="raw-toggle" id="rawToggle" onclick="toggleRaw()" title="展開／收合"><svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>原始整合內容</button>
+                    <div class="checkbox-group" style="margin-bottom:0;"><input type="checkbox" id="includePrompt" checked onchange="refreshPreview(true);saveData();"><label for="includePrompt" title="只影響這裡的複製與匯出；AI 整理一律只送一次 Prompt">包含 Prompt</label></div>
+                    <span class="mask-state" id="maskState"></span>
+                    <div class="btn-group">
+                        <button class="btn btn-outline" onclick="copyPreview()"><svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>複製</button>
+                        <details class="menu"><summary class="btn btn-outline"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>匯出</summary><div class="menu-list"><button onclick="doExport('txt','raw',this)">TXT</button><button onclick="doExport('html','raw',this)">HTML</button><button onclick="doExport('pdf','raw',this)">PDF</button></div></details>
+                    </div>
+                </div>
+                <div id="rawBody">
+                    <div class="helper-text" style="color:var(--text-muted);margin-bottom:6px;">各分頁資料的整合結果，進入本頁時自動更新。未設定 API Key 時，可複製後貼到外部 AI 使用。</div>
+                    <textarea id="previewText" placeholder="尚未輸入資料..." readonly></textarea>
+                </div>
+            </div>
         </div>
         
     </div>
@@ -494,7 +534,7 @@
         // ===== 授權驗證結束 =====
         
         const FRAILTY_DESC={"1":"非常健壯","2":"健康良好","3":"日常可自理","4":"脆弱但尚可自理","5":"輕度衰弱","6":"中度衰弱","7":"重度衰弱","8":"極重度衰弱","9":"末期病人"};
-        let data={promptText:"",includePrompt:true,promptTemplates:Array.from({length:10},(_,i)=>({name:`範本${i+1}`,content:""})),patientName:"",patientAge:"",patientMRN:"",ecog:"",cfs:"",medicalSummary:"",labData:"",tumorMarkers:[],pathology:[],imaging:[],previewText:""};
+        let data={promptText:"",includePrompt:true,promptTemplates:Array.from({length:10},(_,i)=>({name:`範本${i+1}`,content:""})),patientName:"",patientAge:"",patientMRN:"",ecog:"",cfs:"",medicalSummary:"",labData:"",tumorMarkers:[],pathology:[],imaging:[],previewText:"",aiResult:"",aiStale:false,selectedTemplate:0};
         let selectedTemplateIndex=0,pathologyEditIndex=null,imagingEditIndex=null,markerEditIndex=null,isEditMode=false,originalContent="",dataChanged=false;
         const icons={file:'<svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',edit:'<svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',trash:'<svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',check:'<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',warn:'<svg class="icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'};
         
@@ -558,37 +598,52 @@
             closeSettings();
         }
         function clearApiKey(){if(!confirm('確定要清除 API Key？'))return;aiSettings.apiKey='';saveAiSettings();updateAiStatus();cancelKeyEdit();showToast('API Key 已清除');}
+        // 模型退役時改這裡即可（Claude 3.5 Sonnet 已於 2025-10-28 退役，官方建議替代為 claude-sonnet-4-6）
+        const AI_MODELS={openai:'gpt-4o-mini',claude:'claude-sonnet-4-6'};
+        let patientEpoch=0,dataRev=0;
+        function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
         async function aiOrganize(){
-            const content=document.getElementById('previewText').value;
-            if(!content.trim())return showToast('請先在預覽分頁產生內容','error');
-            if(!aiSettings.apiKey)return showToast('請先設定 API Key','error');
+            if(isEditMode)return showToast('Prompt 編輯中，請先儲存或取消','error');
+            // 每次都用各分頁的最新資料重新組合；Prompt 只送一次（不受「包含 Prompt」勾選影響）
+            const content=buildContent(false);
+            if(!content.trim())return showToast('尚未輸入病人資料','error');
+            if(!aiSettings.apiKey){showToast('請先設定 API Key','error');openSettings();return;}
             const promptCmd=data.promptText.trim();
-            if(!promptCmd)return showToast('請先在 Prompt 分頁載入範本','error');
+            if(!promptCmd)return showToast('目前範本是空的，請先到 Prompt 分頁載入範本','error');
+            const epoch=patientEpoch,rev=dataRev;
             document.getElementById('aiLoading').style.display='flex';
             document.getElementById('btnAiOrganize').disabled=true;
             try{
-                let result;
+                let result,truncated=false;
                 if(aiSettings.provider==='openai'){
                     const res=await fetch('https://api.openai.com/v1/chat/completions',{
                         method:'POST',
                         headers:{'Content-Type':'application/json','Authorization':`Bearer ${aiSettings.apiKey}`},
-                        body:JSON.stringify({model:'gpt-4o-mini',messages:[{role:'user',content:`${promptCmd}\n\n${content}`}],max_tokens:4000})
+                        body:JSON.stringify({model:AI_MODELS.openai,messages:[{role:'user',content:`${promptCmd}\n\n${content}`}],max_tokens:4000})
                     });
                     const d=await res.json();
                     if(d.error)throw new Error(d.error.message);
                     result=d.choices[0].message.content;
+                    truncated=d.choices[0].finish_reason==='length';
                 }else{
                     const res=await fetch('https://api.anthropic.com/v1/messages',{
                         method:'POST',
                         headers:{'Content-Type':'application/json','x-api-key':aiSettings.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-                        body:JSON.stringify({model:'claude-3-5-sonnet-20241022',max_tokens:4000,messages:[{role:'user',content:`${promptCmd}\n\n${content}`}]})
+                        body:JSON.stringify({model:AI_MODELS.claude,max_tokens:4000,messages:[{role:'user',content:`${promptCmd}\n\n${content}`}]})
                     });
                     const d=await res.json();
                     if(d.error)throw new Error(d.error.message);
                     result=d.content[0].text;
+                    truncated=d.stop_reason==='max_tokens';
                 }
+                // 等待期間若已按「新病人」，這份結果屬於上一位病人，不可寫入
+                if(epoch!==patientEpoch)return showToast('病人已更換，已捨棄這次 AI 結果','warning');
                 document.getElementById('aiResultText').value=result;
-                showToast('AI 整理完成');
+                data.aiStale=(rev!==dataRev);
+                saveData();
+                updateResultNotice();
+                document.getElementById('aiResultText').scrollIntoView({behavior:'smooth',block:'nearest'});
+                if(truncated)showToast('AI 輸出達長度上限，結果可能不完整','warning');else showToast('AI 整理完成');
             }catch(e){
                 console.error(e);
                 showToast('AI 錯誤: '+e.message,'error');
@@ -605,7 +660,7 @@
             }else{fallbackCopy(text);}
             function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showToast('已複製到剪貼簿');}catch(e){showToast('複製失敗','error');}document.body.removeChild(ta);}
         }
-        function clearAiResult(){document.getElementById('aiResultText').value='';showToast('已清除');}
+        function clearAiResult(){document.getElementById('aiResultText').value='';data.aiStale=false;saveData();updateResultNotice();showToast('已清除');}
         // ===== AI 設定結束 =====
         
         // ===== 預設範本功能 =====
@@ -613,88 +668,84 @@
         const PRESET_TEMPLATES = [
             {
                 name: '放腫病歷整理',
-                content: `你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成結構化的臨床摘要。
+                content: `你是一位放射腫瘤科住院醫師，請將以下原始病歷資料整理成可直接貼入病歷系統的結構化臨床摘要。
 
 ================================================================
 核心原則（最高優先）
 ================================================================
-1. 只能使用貼上的資料，絕對不可自行推斷、補充、或引用任何外部醫學知識與記憶
-2. 資料不足時，直接留空，不填任何文字
-3. 良性、退化性、偶發性無關病灶不需提及，只保留與主診斷相關的陽性發現
-4. 病人腫瘤分子形態可能會隨時間改變，必須依時序分別記錄各次切片的分子分型
+1. 只能使用貼上的資料，不可自行推斷、補充或引用外部醫學知識。例外只有兩處：AI 建議參考、分子形態演變總覽的 Subtype 欄。
+2. 未記載的資料直接留空，不寫 unknown、N/A、not mentioned 等文字。例外只有 Social History（見該節規則）。
+3. 良性、退化性、偶發且與腫瘤無關的發現省略。
+4. 原文任何疑似惡性的發現（原發、復發、殘存、轉移、第二原發），不論是否與主診斷相關，都必須保留；可以精簡，不可刪除，也不可改寫成確診。
+5. 不可自行推導 TNM。cTNM、ycTNM、pTNM、ypTNM 只在原文明確記載時填入，不可由腫瘤大小、LN 數量、影像描述或病理結果自行推算。
+6. cTNM 與 pTNM/ypTNM 是兩個獨立資訊。有手術者，原文有記載 cTNM 就必須保留，不得因為有 pTNM 而省略；任一個原文未記載時直接留空，不得自行補足。
+7. 多次病理檢體依時間分開記錄，不可把不同時間點的 histology、Grade、IHC 或分子標記混在一起，也不可把後來的檢體結果套用到較早的檢體。
+8. 不同來源內容矛盾時，不自行判斷哪一筆較合理：該節有時間規則者依規則選擇（例如【分期】）；沒有規則者兩筆並列並附日期。
 
 ================================================================
-格式規則（重要）
+格式規則
 ================================================================
-- 不使用粗體（不要用 ** 或 __ 包圍文字）
-- 不使用 emoji
-- 不使用多層縮排，保持扁平結構
-- 段落內項目用 # 開頭，不用 - 開頭
-- 章節標題用文字加底線 --- 分隔，不用 ## 標題格式
-- 輸出要能直接貼到病歷系統，避免特殊格式符號
+- 英文書寫，章節標題保留中文
+- 不使用粗體、emoji、Markdown 標題、多層縮排
+- 章節之間以 --- 分隔
+- 各項以 # 開頭（AI 建議參考一節用 - 開頭）
+- 民國年轉為西元年；完整日期統一為 YYYY/MM/DD，原文只有年月或年份者照原文精度，不自行補日期
+- 簡潔，以門診快速閱讀為原則
+- 同一章節內不重複相同資訊；跨章節必要的重複不可省略（例如 cTNM 同時出現在診斷、影像檢查、治療計畫）
 
 ================================================================
-輸出格式
+輸出骨架（照此順序與標籤輸出）
 ================================================================
+全形括號（）內為說明文字，不輸出。
 
 診斷
-依腫瘤類型選擇適當格式：
-
-乳癌格式：
-[Grade] [病理類型] of breast, [位置L/X'/Xcm], [IHC直接列出], s/p [手術] (日期), [pTNM], [margins/LVI/PNI], [LN狀態]; for [放射線治療意圖]
-
-非乳癌、無手術的診斷格式（例如食道癌、頭頸癌等）：
-[分化程度] [病理類型] of [器官], [位置/解剖描述], [cTNM], [主要 LN 及轉移部位簡述]; for [治療意圖]
-
-範例（食道癌）：
-Moderately differentiated squamous cell carcinoma of esophagus, middle-to-lower third (28–33 cm from incisor), cT3N1M1, with celiac LN metastases and para-aortic LN (L3, distant metastasis); for palliative treatment evaluation.
-
+（一句話，格式見【診斷】）
 ---
 病史
-#Present Illness: 2-3句，描述主訴、關鍵診斷過程、切片結果、轉介緣由。診斷後才執行的治療省略不寫。
-#Past Medical History: 只列疾病或手術名稱，以逗號分隔。有寫 nil 即有問標示 Nil。若有 DM(-)/HTN(-) 等陰性項目應保留。
-#Family History: 有寫 nil 即有問標示 Nil。
-#Social History: Smoking: X / Alcohol: X / Betel nut: X
-#Gynecologic / Breast History:（僅乳癌或婦癌）
-Menarche / Menopause / Parity / Hormone therapy / Prior surgery 各項列出；其他癌別完全省略此欄
+#Present Illness:
+#Past Medical History:
+#Family History:
+#Social History:
+（以下 Gynecologic / Breast History 共七行，僅乳癌或婦癌輸出，其他癌別整段省略）
+#Gynecologic / Breast History:
+Menarche:
+Menopause:
+Parity:
+Breastfeeding:
+Hormone therapy:
+Prior surgery:
 #Drug Allergy:
 ---
 理學檢查
 #ECOG:
 #Body weight:
-#Physical Examination: 只寫異常發現；若全部正常則寫 general condition ok
+#Physical Examination:
 ---
 癌指數
-#指標名稱: 數值 (日期) -> 數值 (日期)
-若無資料則留空
-
+#Marker: value (date) -> value (date)
 ---
 病理檢查
-#Biopsy (日期): 部位 — 病理診斷，Grade。IHC 直接列出（有百分比寫 ER(>90%)，無百分比寫 HER2(2+)）。FISH 結果。
-#Surgery (日期): 部位 — 病理診斷，Grade，腫瘤大小。LVI/PNI/EIC。Margins 狀態。LN 狀態。Stage: pTNM。
-若有多次切片且分子形態可能變化（乳癌等），末尾加上：
+#Biopsy (date): site — diagnosis, Grade, IHC, FISH/molecular result.
+#Surgery (date): site — diagnosis, Grade, tumor size, LVI/PNI/EIC, margin, LN status, Stage: pTNM/ypTNM.
+（以下表格僅在至少兩個不同時間點的檢體具有 ER/PR/HER2/Ki-67 資料時輸出，否則整段省略）
 分子形態演變總覽
 | 時間點 | ER | PR | HER2 | Ki-67 | Subtype |
 |---|---|---|---|---|---|
-依時序填入各次切片資料。
 ---
 影像檢查
-每份報告一行，以 #影像類型(日期): 開頭。良性、退化、無關病灶略去。
-
+#Imaging type (date): findings.
 ---
 治療計畫
-Initial course (年)
-cTNM -> pTNM（若有手術則填入）
-- Surgery: 術式 (日期)
-- RT: 起訖日期，劑量/分次
-- Chemotherapy: 藥物、劑量、日期
-- Hormone therapy: 藥物 (起始日期)
-- Other: 說明
-
+Initial course (year)
+#Stage: cTNM -> pTNM / ypTNM
+#Surgery: procedure (date)
+#RT: date range, total dose/fractions
+#Chemotherapy: regimen, dose, date
+#Hormone therapy: drug (start date)
+#Other:
 ---
 AI 建議參考（非病歷內容，僅供醫師參考）
 > 不代表實際醫囑，最終決策請由主治醫師判斷。
-
 - RT role:
 - Systemic therapy:
 - Suggested workup:
@@ -702,46 +753,150 @@ AI 建議參考（非病歷內容，僅供醫師參考）
 - Follow-up:
 
 ================================================================
-書寫規則
+各節規則
 ================================================================
 
-【格式】
-- 不用粗體、不用 emoji、不用多層縮排
-- 項目用 # 開頭
-- IHC 有百分比者直接寫 ER(>90%)，無百分比者寫 HER2(2+)
-- 英文書寫，章節標題保留中文
-- 民國年自動轉換為西元年
-- 資料不足時直接留空，不填任何說明文字
+【診斷】
+寫成一句話，依腫瘤類型選用格式。
 
-【診斷句】
-- 乳癌：位置用 L/2'/6 格式，IHC 直接列出數值
-- 非乳癌無手術者：用 [分化程度] [病理類型] of [器官], [位置], [cTNM], [LN/mets 簡述] 格式
-- 簡潔，一句話完成
+乳癌：
+[Grade] [histology] of breast, [位置 L/X'/Xcm], [IHC], [cTNM], s/p [surgery] (date), [pTNM/ypTNM], [margin/LVI/PNI], [LN status]; for [RT intent].
+
+乳癌，術前切片與手術檢體的 histology、Grade、IHC 任一項不同時，術前寫一次、術後再寫一次：
+[biopsy Grade] [biopsy histology] of breast, [位置 L/X'/Xcm], [biopsy IHC], [cTNM], s/p [surgery] (date), [surgical Grade] [surgical histology], [surgical IHC], [pTNM/ypTNM], [margin/LVI/PNI], [LN status]; for [RT intent].
+
+非乳癌、有手術：
+[differentiation] [histology] of [organ], [site], [cTNM], s/p [surgery] (date), [pTNM/ypTNM], [margin/LVI/PNI], [LN status]; for [treatment intent].
+
+非乳癌、無手術：
+[differentiation] [histology] of [organ], [site], [cTNM], [major malignant LN / metastatic sites]; for [treatment intent].
+
+有術前治療者依時序呈現：
+[cTNM], s/p neoadjuvant [treatment], s/p [surgery] (date), [ypTNM].
+
+範例（食道癌）：
+Moderately differentiated squamous cell carcinoma of esophagus, middle-to-lower third (28–33 cm from incisor), cT3N1M1, with celiac LN metastases and para-aortic LN (L3, distant metastasis); for palliative treatment evaluation.
+
+- 乳癌位置一律用 L/2'/6cm、R/10'/3cm 這種簡寫，不展開成文字
+- IHC 直接列出數值
+- cTNM 寫在 s/p [surgery] 之前，pTNM/ypTNM 寫在之後
+- 原文未記載的成分直接省略，不留下多餘的逗號或空欄
+- 乳癌切片與手術檢體完全相同時，histology、Grade、IHC 只在 cTNM 之前寫一次
+- 乳癌切片與手術檢體不同時，不可合併成一組，也不可只留其中一次
+
+【分期】
+- cTNM 來源：手術或治療開始日期之前的影像報告 staging、門診/住院病歷、MDT 紀錄中明寫的 clinical stage，照原文抄錄
+- 多筆記載不一致時，採用最接近手術日或首次治療開始日的一筆
+- 有術前治療者：治療前為 cTNM，術後病理為 ypTNM；術前治療後的再分期原文有寫才填 ycTNM
+- 原文未明寫時留空
 
 【病史】
-- Past Medical History 只列疾病名稱，以逗號分隔，不分行
-- 若有陰性項目如 DM(-)/HTN(-)，代表有問過，應保留
-- 資料不足直接留空
+- Present Illness：2–3 句，只寫主訴或發現病灶的原因、病理診斷之前的關鍵診斷過程、切片結果、轉介緣由。病理診斷之後的檢查（staging workup、影像、抽血）與治療都不寫在這裡，放在影像檢查、癌指數、治療計畫各節
+- Past Medical History：只列疾病或手術名稱，以逗號分隔，不分行。原文有寫 nil 則標示 Nil。DM(-)、HTN(-) 等明確陰性紀錄代表有問過，必須保留
+- Family History：依原文記載；原文有寫 nil 則標示 Nil
+- Gynecologic / Breast History：六個標籤固定全部列出，每項一行；原文沒有的項目，標籤後留空。Breastfeeding 只依原文填寫，不可由 Parity 推斷
 
-【病理】
-- 每次切片獨立一行
-- 手術檢體需附 pTNM
-- Subtype 名稱只在「分子形態演變總覽」表格出現
-- 無資料欄位直接略去
+【Social History】
+- 原文明確記載都沒有：
+#Social History: Smoking(-) Alcohol(-) Betel nut(-)
+- 原文記載有使用：照原文寫量與年數，例如
+#Social History: Smoking(+) 1 PPD for 20 yr, Alcohol(-) Betel nut(-)
+- 已戒者原文有寫才加註
+- 原文未記載或不確定：輸出以下兩行，由醫師問診後刪除其中一行
+#Social History: Smoking(-) Alcohol(-) Betel nut(-)
+#Social History: Smoking(+) ( ) PPD for ( ) yr, Alcohol( ) Betel nut( )
+- 只有部分項目有記載：仍輸出兩行，已記載的項目在兩行都照原文寫
+- 半形括號空格原樣輸出，不可自行填入數值
 
-【影像】
-- 簡潔，每份一行
-- 不需要獨立 Summary 行，重點整合在描述內
+【理學檢查】
+- Body weight 採此次就診或原文最新的一筆
+- Physical Examination 只寫異常發現；原文明確記載檢查正常時寫 general condition ok，不可因為沒有異常紀錄就自行寫正常
 
-【AI建議】
-- 用 > 引言開頭說明非正式醫囑
-- 各項用 - 開頭
-- 可中英混用，可引用醫學知識
+【癌指數】
+- 只列與目前腫瘤相關的 marker，同一 marker 依時序排列，不同 marker 分行
+- 無資料時保留章節標題，內容留空
+
+【病理檢查】
+- 每次檢體獨立一行，依日期排序
+- IHC 有百分比寫 ER(>90%)、PR(80%)；無百分比寫 HER2(2+)
+- 只寫原文有記載的項目，無資料的項目直接略去
+- 手術檢體的 pTNM 原文明確記載才填，有術前治療者寫 ypTNM
+- 分子形態演變總覽每一列只能用該次檢體自己的資料，不可用其他時間點的 IHC 補值
+- Subtype 只用以下四類：HR+/HER2-、HR+/HER2+、HR-/HER2+、TNBC
+- HR+：ER 或 PR 任一 ≥1%，或原文記為 positive
+- HER2+：IHC 3+，或 FISH/ISH amplified。HER2-：IHC 0、1+，或 2+ 且 FISH/ISH not amplified
+- HER2 2+ 而無 FISH/ISH 結果，或資料不足以分類時，Subtype 留空
+- 不使用 Luminal A/B、HER2-enriched 等名稱；Subtype 只出現在這個表格，不寫進診斷句或其他章節
+
+【影像檢查】
+- 每份報告一行，依日期排序；行長不限，不可為了縮短而刪除疑似惡性的發現
+- 只保留與癌症相關的重要異常，良性、退化、無關偶發病灶略去
+- 原文凡出現 suspicious、suspected、cannot exclude、r/o、probable、likely、favor、compatible with、indeterminate 等字眼，且對象為 malignancy、tumor、metastasis、recurrence、residual disease、progression 者，可精簡用字，但必須保留病灶位置、原文有寫的大小，以及原文的不確定語氣
+- 判讀的第一順位是 inflammation、reactive 等良性原因，但 DDx 列有惡性可能者，視為疑似惡性，病灶與 DDx 都要保留
+- 其他器官的疑似惡性病灶或第二原發也要保留
+- 報告原文明載的 imaging staging（cT/cN/cM）必須保留在該行末尾，不可因為診斷一節已有分期而刪除；staging 寫在 SUGGESTIONS 或 RECOMMENDATION 段落者同樣要保留
+- 原文對全身遠端轉移作出明確陰性結論時，才濃縮為 no distant mets
+- 原文只說特定器官沒有轉移時，照原文範圍寫（例如 no liver or bone mets），不可擴大成 no distant mets
+- 不另外產生 Summary 行
+
+【PET/CT】
+PET/CT 報告仍是一份一行，依以下步驟產生。
+1. 配對：把 FINDINGS 的每個病灶與 IMPRESSION 中對應的判讀以部位配成一組。一個病灶只寫一次，位置、大小、SUVmax 取自 FINDINGS，判讀與 DDx 取自 IMPRESSION
+2. 保留，符合任一項即保留：原發腫瘤；判讀或 DDx 出現 malignancy、cancer、neoplasm、tumor、metastasis、recurrence、residual、lymphoma 任一字眼，即使第一判讀是 inflammation 或 reactive；FDG-avid 病灶但 IMPRESSION 沒有對它下判讀
+3. 刪除：negative、others: negative、physiologic FDG activity；判讀只有 inflammation / degenerative / benign 且 DDx 完全沒有惡性字眼的病灶；HISTORY、PROCEDURES、致謝語、clinical correlation 與 follow-up 建議
+4. 每個保留病灶的寫法：[site/location] [size], SUVmax [early] -> [delayed], [判讀], DDx [原文 DDx]
+5. 原文沒有的欄位略去；SUVmax 兩個數值都保留；沒有攝取寫 no FDG uptake；DDx 照原文全列，不可只留第一個（etc. 可省略）；同器官且判讀相同的多個病灶才合併
+6. 病灶之間以分號分隔，順序：原發灶 -> regional LN -> distant mets -> 其他疑似惡性病灶 -> 遠端轉移的陰性結論 -> staging
+7. 原文任何位置（包含 SUGGESTIONS）出現的 TNM 照抄並附版本，放在行尾
+
+範例（僅示範寫法，內容不是本病人的資料，不可引用）
+原文節錄：
+FINDINGS:
+2. Chest: (1) multiple tiny nodules with no FDG uptake in both lungs; (2) a small FDG-avid lesion (SUVmax: 1.9 -> 2.1), about 1.0 cm, in 9' position of right breast; (3) others: negative
+3. Abdomen and Pelvis: (1) a wall-thickening lesion with high FDG uptake (SUVmax: 13.0 -> 16.2) in cecal area; (2) multiple nodules with background to mild FDG uptake (SUVmax: 1.6 -> 1.9) in peri-tumoral area; (3) others: negative
+4. Musculoskeletal: (1) a mildly FDG-avid lesion (SUVmax: 3.0 -> 3.6) in left shoulder area; (2) others: negative
+IMPRESSION:
+1. Compatible with a highly metabolic active malignancy in cecum.
+2. Regional LN metastases are suspected for the multiple nodules in peri-tumoral areas, DDx: reactive LNs.
+3. Inflammation is suspected for the mildly hypermetabolic lesion in 9' position of right breast, DDx: benign neoplasm, breast cancer, metastasis, etc.
+4. Inflammatory nodules are suspected for the multiple tiny nodules in both lungs, DDx: metastasis.
+5. Inflammation is considered for the hypermetabolic lesion in left shoulder area.
+6. No other definitely hypermetabolic lesion of suggesting distant metastasis is noted in liver, bone or elsewhere.
+SUGGESTIONS:
+1. Further clinical correlation and regular follow-up are recommended to ascertain the nature of aforementioned lesions.
+2. TNM staging for Colorectal cancer (AJCC 8th edition): cT3N2M0
+輸出：
+#PET/CT (date): Cecum wall thickening, SUVmax 13.0 -> 16.2, compatible with malignancy; peri-tumoral multiple nodules, SUVmax 1.6 -> 1.9, regional LN mets suspected, DDx reactive LNs; R breast 9' 1.0 cm, SUVmax 1.9 -> 2.1, inflammation suspected, DDx benign neoplasm, breast cancer, metastasis; bil. tiny lung nodules, no FDG uptake, inflammatory nodules suspected, DDx metastasis; no distant mets; cT3N2M0 (AJCC 8th).
+說明：左肩病灶的判讀只有 inflammation、沒有惡性 DDx，所以刪除；右乳與肺結節的 DDx 含惡性，所以保留；IMPRESSION 第 6 條寫 liver, bone or elsewhere，是全身性的陰性結論，所以寫 no distant mets。
+
+【治療計畫】
+- 只記錄已實際執行的治療，以及原文明確寫為 planned、scheduled、arranged 或已決定的治療
+- 原文只是討論或考慮的治療（consider、may receive、option、待評估）不寫入本節
+- 不可依病情自行推測應做什麼治療
+- Stage：cTNM 原文有記載就填；pTNM/ypTNM 只在有手術且原文明載時填；沒有後者時只寫 cTNM，不留箭頭
+- Other：targeted therapy、immunotherapy 等其他原文記載的抗癌治療
+- 沒有資料的項目，標籤保留、內容留空
+
+【AI 建議參考】
+- 可使用一般醫學知識，可中英混用
+- 每項 1–2 句，只回答與目前放射腫瘤科門診決策直接相關的內容，不寫教科書式說明
+- 本節的推論不可回填到前面的病歷內容
 
 ================================================================
-輸入病歷資料：
+輸出前自我檢查（只檢查，不輸出檢查過程或結果）
 ================================================================
-[貼上原始病摘、檢驗、病理、影像報告]`
+1. 原文有記載的 cTNM 沒有漏掉；沒有自行推導任何 TNM
+2. 原文疑似惡性的影像發現（包含只出現在 DDx 的惡性可能）沒有被刪除，也沒有被改寫成確診
+3. PET/CT 的 IMPRESSION 每一條所提到的每個病灶，都已寫入或符合刪除條件；SUVmax 與原文一致
+4. 不同時間點的病理沒有混用
+5. 沒有加入原文不存在的病史、檢查或治療
+6. 沒有把只是討論或考慮的治療寫成已決定
+7. 沒有把特定器官無轉移擴大寫成 no distant mets
+
+================================================================
+輸入病歷資料
+================================================================
+[貼上原始病摘、門診紀錄、病理、影像、檢驗與治療資料]`
             },
             {
                 name: '多專科會議 JSON',
@@ -1015,7 +1170,7 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
             const targetIdx=parseInt(document.getElementById('presetTarget').value);
             const preset=PRESET_TEMPLATES[idx];
             data.promptTemplates[targetIdx]={name:preset.name,content:preset.content};
-            selectedTemplateIndex=targetIdx;
+            selectedTemplateIndex=targetIdx;data.selectedTemplate=targetIdx;
             renderTemplateList();
             document.getElementById('promptText').value=preset.content;
             data.promptText=preset.content;
@@ -1026,14 +1181,31 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
         // ===== 預設範本功能結束 =====
         
         function markDataChanged(){
-            if(!dataChanged){
-                dataChanged=true;
-                document.getElementById('previewText').value='';
-                document.getElementById('previewNotice').className='preview-notice warning';
-                document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>資料已變更，請重新產生預覽';
+            dataChanged=true;dataRev++;
+            if(document.getElementById('aiResultText').value.trim())data.aiStale=true;
+            updateResultNotice();
+            scheduleSave();
+        }
+        function updateResultNotice(){
+            const n=document.getElementById('resultNotice');
+            if(document.getElementById('aiResultText').value.trim()&&data.aiStale){
+                n.className='preview-notice warning';
+                n.innerHTML=icons.warn+'資料在 AI 整理後有變更，下方結果可能不是最新，請重新按「AI 整理」';
+            }else{
+                n.className='preview-notice';
+                n.innerHTML='<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>按「AI 整理」會自動整合各分頁的最新資料後送出，不需先產生預覽';
             }
         }
-        
+        // ===== 自動儲存 =====
+        let saveTimer=null;
+        function setSaveStatus(st){const el=document.getElementById('saveStatus');if(!el)return;el.textContent=st==='saving'?'儲存中…':st==='error'?'儲存失敗':'已自動儲存';el.className='save-status'+(st==='error'?' error':'');}
+        function scheduleSave(){setSaveStatus('saving');clearTimeout(saveTimer);saveTimer=setTimeout(saveData,700);}
+        // ===== 整理結果頁：原始內容收合 / 匯出選單 =====
+        function loadUi(){try{return JSON.parse(localStorage.getItem('chart_ui')||'{}')||{};}catch(e){return {};}}
+        function setRawOpen(open,persist){document.getElementById('rawBody').style.display=open?'':'none';document.getElementById('rawToggle').classList.toggle('open',open);if(persist)localStorage.setItem('chart_ui',JSON.stringify({...loadUi(),rawOpen:open}));}
+        function toggleRaw(){setRawOpen(document.getElementById('rawBody').style.display==='none',true);}
+        function doExport(fmt,src,el){const d=el&&el.closest('details');if(d)d.removeAttribute('open');({txt:exportTXT,html:exportHTML,pdf:exportPDF})[fmt](src);}
+        document.addEventListener('click',e=>{document.querySelectorAll('details.menu[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open');});});
         function formatDateInput(el){
             let v=el.value.replace(/\D/g,'');
             if(v.length>=8){v=v.substring(0,8);el.value=`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;validateDateInput(el);}
@@ -1063,12 +1235,21 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
             return true;
         }
         
-        document.addEventListener('DOMContentLoaded',()=>{loadData();loadAiSettings();updateAiStatus();initTabs();renderTemplateList();renderMarkerTable();renderPathologyTable();renderImagingTable();applyDataToUI();});
-        function initTabs(){document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(`tab-${b.dataset.tab}`).classList.add('active');}));}
+        document.addEventListener('DOMContentLoaded',()=>{
+            loadData();loadAiSettings();updateAiStatus();initTabs();renderTemplateList();renderMarkerTable();renderPathologyTable();renderImagingTable();applyDataToUI();
+            const ui=loadUi();setRawOpen(ui.rawOpen===undefined?!aiSettings.apiKey:!!ui.rawOpen,false);
+            updateMaskState();setSaveStatus('saved');
+            // 輸入中即自動儲存（debounce），不必等 change 或 30 秒
+            ['patientMRN','patientName','patientAge','summaryText','labText'].forEach(id=>document.getElementById(id).addEventListener('input',markDataChanged));
+            // Ctrl/Cmd + Enter = 儲存+繼續
+            [['pathologyContent',savePathologyContinue],['imagingContent',saveImagingContinue]].forEach(([id,fn])=>document.getElementById(id).addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();fn();}}));
+        });
+        function switchTab(name){document.querySelectorAll('.tab-btn').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));document.querySelectorAll('.tab-content').forEach(x=>x.classList.toggle('active',x.id===`tab-${name}`));if(name==='result'){refreshPreview(true);updateResultNotice();}}
+        function initTabs(){document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));}
         function showToast(msg,type='success'){const t=document.getElementById('toast');t.innerHTML=`${type==='warning'?icons.warn:icons.check} ${msg}`;t.className='toast show'+(type==='error'?' error':type==='warning'?' warning':'');setTimeout(()=>t.classList.remove('show'),2000);}
         
-        function renderTemplateList(){const l=document.getElementById('templateList');l.innerHTML='';data.promptTemplates.forEach((t,i)=>{const b=document.createElement('button');b.className='template-btn'+(i===selectedTemplateIndex?' selected':'');b.innerHTML=`${icons.file} ${t.name}${t.content.trim()?'*':''}`;b.onclick=()=>selectTemplate(i);l.appendChild(b);});}
-        function selectTemplate(i){if(isEditMode){if(!confirm('放棄修改？'))return;cancelEditMode();}selectedTemplateIndex=i;const t=data.promptTemplates[i];document.getElementById('promptText').value=t.content;hideRenamePanel();renderTemplateList();}
+        function renderTemplateList(){const l=document.getElementById('templateList');l.innerHTML='';data.promptTemplates.forEach((t,i)=>{const b=document.createElement('button');b.className='template-btn'+(i===selectedTemplateIndex?' selected':'');b.innerHTML=`${icons.file} ${t.name}${t.content.trim()?'*':''}`;b.onclick=()=>selectTemplate(i);l.appendChild(b);});const sel=document.getElementById('activeTemplate');if(sel){sel.innerHTML=data.promptTemplates.map((t,i)=>({t,i})).filter(x=>x.t.content.trim()||x.i===selectedTemplateIndex).map(x=>`<option value="${x.i}">${esc(x.t.name)}${x.t.content.trim()?'':'（空）'}</option>`).join('');sel.value=String(selectedTemplateIndex);}}
+        function selectTemplate(i){if(isEditMode){if(!confirm('放棄修改？')){renderTemplateList();return;}cancelEditMode();}selectedTemplateIndex=i;data.selectedTemplate=i;const t=data.promptTemplates[i];document.getElementById('promptText').value=t.content;hideRenamePanel();renderTemplateList();saveData();if(document.getElementById('tab-result').classList.contains('active'))refreshPreview(true);}
         function copyPrompt(){const t=document.getElementById('promptText').value;if(!t.trim()){showToast('Prompt 為空','error');return;}navigator.clipboard.writeText(t).then(()=>showToast('已複製 Prompt')).catch(()=>showToast('複製失敗','error'));}
         function enableEditMode(){isEditMode=true;originalContent=document.getElementById('promptText').value;document.getElementById('promptText').removeAttribute('readonly');document.getElementById('btnEditTemplate').style.display='none';document.getElementById('btnSaveTemplate').style.display='';document.getElementById('btnCancelEdit').style.display='';document.getElementById('editModeHint').classList.add('show');document.getElementById('promptText').focus();}
         function cancelEditMode(){isEditMode=false;document.getElementById('promptText').value=originalContent;document.getElementById('promptText').setAttribute('readonly','');document.getElementById('btnEditTemplate').style.display='';document.getElementById('btnSaveTemplate').style.display='none';document.getElementById('btnCancelEdit').style.display='none';document.getElementById('editModeHint').classList.remove('show');}
@@ -1087,27 +1268,36 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
         function deleteMarker(i){if(confirm('確定刪除？')){data.tumorMarkers.splice(i,1);renderMarkerTable();saveData();markDataChanged();showToast('已刪除');}}
         function clearAllMarkers(){if(!data.tumorMarkers.length)return;if(confirm('確定清除？')){data.tumorMarkers=[];renderMarkerTable();saveData();markDataChanged();showToast('已清除');}}
 
-        function renderPathologyTable(){const tb=document.getElementById('pathologyTableBody');data.pathology.sort((a,b)=>a.date.localeCompare(b.date));if(!data.pathology.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.pathology.map((p,i)=>`<tr><td>${p.date}</td><td>${p.category||'Biopsy'}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startPathologyEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deletePathology(${i})">${icons.trash}</button></td></tr>`).join('');}
-        function startPathologyEdit(i){pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');document.getElementById('pathologyDateError').classList.remove('show');document.getElementById('pathologyDate').classList.remove('error');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');document.getElementById('pathCatMolecular').checked=cats.includes('分子檢測');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;document.getElementById('pathCatMolecular').checked=false;}document.getElementById('pathologyDate').focus();}
-        function savePathology(){const dateEl=document.getElementById('pathologyDate');const d=dateEl.value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked,catM=document.getElementById('pathCatMolecular').checked;if(!d||!t)return showToast('日期與內容必填','error');if(!catB&&!catP&&!catM)return showToast('請選擇分類','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');if(catM)cats.push('分子檢測');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;cancelPathologyEdit();renderPathologyTable();saveData();markDataChanged();showToast('已儲存');}
+        function renderPathologyTable(){const tb=document.getElementById('pathologyTableBody');data.pathology.sort((a,b)=>a.date.localeCompare(b.date));updatePatientInfoBar();if(!data.pathology.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.pathology.map((p,i)=>`<tr class="row-click" onclick="startPathologyEdit(${i})" title="點一下編輯"><td>${esc(p.date)}</td><td>${esc(p.category||'Biopsy')}</td><td><div class="cell-preview">${esc(p.text.replace(/\s+/g,' ').substring(0,220))}</div></td><td><div class="action-btns"><button class="icon-btn" onclick="event.stopPropagation();startPathologyEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="event.stopPropagation();deletePathology(${i})">${icons.trash}</button></div></td></tr>`).join('');}
+        function pathologyDirty(){if(!document.getElementById('pathologyEditor').classList.contains('active'))return false;const t=document.getElementById('pathologyContent').value.trim();const cur=pathologyEditIndex!==null&&data.pathology[pathologyEditIndex]?data.pathology[pathologyEditIndex].text.trim():'';return t!==cur;}
+        function startPathologyEdit(i){if(pathologyDirty()&&!confirm('編輯區有未儲存的內容，確定放棄？'))return;pathologyEditIndex=i;document.getElementById('pathologyEditor').classList.add('active');document.getElementById('pathologyDateError').classList.remove('show');document.getElementById('pathologyDate').classList.remove('error');if(i!==null&&data.pathology[i]){document.getElementById('pathologyDate').value=data.pathology[i].date;document.getElementById('pathologyContent').value=data.pathology[i].text;const cats=(data.pathology[i].category||'Biopsy').split('/');document.getElementById('pathCatBiopsy').checked=cats.includes('Biopsy');document.getElementById('pathCatPathology').checked=cats.includes('Pathology');document.getElementById('pathCatMolecular').checked=cats.includes('分子檢測');}else{document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathCatBiopsy').checked=true;document.getElementById('pathCatPathology').checked=false;document.getElementById('pathCatMolecular').checked=false;}document.getElementById('pathologyDate').focus();}
+        function doSavePathology(){const dateEl=document.getElementById('pathologyDate');const d=dateEl.value,t=document.getElementById('pathologyContent').value.trim();const catB=document.getElementById('pathCatBiopsy').checked,catP=document.getElementById('pathCatPathology').checked,catM=document.getElementById('pathCatMolecular').checked;if(!d||!t){showToast('日期與內容必填','error');return false;}if(!catB&&!catP&&!catM){showToast('請選擇分類','error');return false;}if(!validateDateInput(dateEl))return false;const nd=normalizeDate(d);let cats=[];if(catB)cats.push('Biopsy');if(catP)cats.push('Pathology');if(catM)cats.push('分子檢測');const e={date:nd,text:t,category:cats.join('/')};pathologyEditIndex===null?data.pathology.push(e):data.pathology[pathologyEditIndex]=e;pathologyEditIndex=null;renderPathologyTable();saveData();markDataChanged();return true;}
+        function savePathology(){if(!doSavePathology())return;cancelPathologyEdit();showToast('已儲存');}
+        function savePathologyContinue(){if(!doSavePathology())return;document.getElementById('pathologyDate').value='';document.getElementById('pathologyContent').value='';document.getElementById('pathologyDate').focus();showToast('已儲存，繼續下一筆');}
         function cancelPathologyEdit(){document.getElementById('pathologyEditor').classList.remove('active');pathologyEditIndex=null;}
         function deletePathology(i){if(confirm('確定刪除？')){data.pathology.splice(i,1);renderPathologyTable();saveData();markDataChanged();showToast('已刪除');}}
         function clearAllPathology(){if(!data.pathology.length)return;if(confirm('確定清除？')){data.pathology=[];renderPathologyTable();saveData();markDataChanged();showToast('已清除');}}
         
-        function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));if(!data.imaging.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr><td>${p.date}</td><td>${p.type}</td><td>${p.text.replace(/\n/g,' ').substring(0,30)}${p.text.length>30?'...':''}</td><td class="action-btns"><button class="icon-btn" onclick="startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="deleteImaging(${i})">${icons.trash}</button></td></tr>`).join('');}
-        function startImagingEdit(i){imagingEditIndex=i;document.getElementById('imagingEditor').classList.add('active');document.getElementById('imagingDateError').classList.remove('show');document.getElementById('imagingDate').classList.remove('error');if(i!==null&&data.imaging[i]){document.getElementById('imagingType').value=data.imaging[i].type;document.getElementById('imagingDate').value=data.imaging[i].date;document.getElementById('imagingContent').value=data.imaging[i].text;}else{document.getElementById('imagingType').value='CT';document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';}document.getElementById('imagingDate').focus();}
-        function saveImaging(){const dateEl=document.getElementById('imagingDate');const tp=document.getElementById('imagingType').value,d=dateEl.value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t)return showToast('所有欄位必填','error');if(!validateDateInput(dateEl))return;const nd=normalizeDate(d);const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;cancelImagingEdit();renderImagingTable();saveData();markDataChanged();showToast('已儲存');}
+        function renderImagingTable(){const tb=document.getElementById('imagingTableBody');data.imaging.sort((a,b)=>a.date.localeCompare(b.date));updatePatientInfoBar();if(!data.imaging.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">尚無資料</td></tr>';return;}tb.innerHTML=data.imaging.map((p,i)=>`<tr class="row-click" onclick="startImagingEdit(${i})" title="點一下編輯"><td>${esc(p.date)}</td><td>${esc(p.type)}</td><td><div class="cell-preview">${esc(p.text.replace(/\s+/g,' ').substring(0,220))}</div></td><td><div class="action-btns"><button class="icon-btn" onclick="event.stopPropagation();startImagingEdit(${i})">${icons.edit}</button><button class="icon-btn danger" onclick="event.stopPropagation();deleteImaging(${i})">${icons.trash}</button></div></td></tr>`).join('');}
+        function imagingDirty(){if(!document.getElementById('imagingEditor').classList.contains('active'))return false;const t=document.getElementById('imagingContent').value.trim();const cur=imagingEditIndex!==null&&data.imaging[imagingEditIndex]?data.imaging[imagingEditIndex].text.trim():'';return t!==cur;}
+        function startImagingEdit(i){if(imagingDirty()&&!confirm('編輯區有未儲存的內容，確定放棄？'))return;imagingEditIndex=i;document.getElementById('imagingEditor').classList.add('active');document.getElementById('imagingDateError').classList.remove('show');document.getElementById('imagingDate').classList.remove('error');if(i!==null&&data.imaging[i]){document.getElementById('imagingType').value=data.imaging[i].type;document.getElementById('imagingDate').value=data.imaging[i].date;document.getElementById('imagingContent').value=data.imaging[i].text;}else{document.getElementById('imagingType').value='CT';document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';}document.getElementById('imagingDate').focus();}
+        function doSaveImaging(){const dateEl=document.getElementById('imagingDate');const tp=document.getElementById('imagingType').value,d=dateEl.value,t=document.getElementById('imagingContent').value.trim();if(!tp||!d||!t){showToast('所有欄位必填','error');return false;}if(!validateDateInput(dateEl))return false;const nd=normalizeDate(d);const e={type:tp,date:nd,text:t};imagingEditIndex===null?data.imaging.push(e):data.imaging[imagingEditIndex]=e;imagingEditIndex=null;renderImagingTable();saveData();markDataChanged();return true;}
+        function saveImaging(){if(!doSaveImaging())return;cancelImagingEdit();showToast('已儲存');}
+        function saveImagingContinue(){if(!doSaveImaging())return;document.getElementById('imagingDate').value='';document.getElementById('imagingContent').value='';document.getElementById('imagingDate').focus();showToast('已儲存，繼續下一筆');}
         function cancelImagingEdit(){document.getElementById('imagingEditor').classList.remove('active');imagingEditIndex=null;}
         function deleteImaging(i){if(confirm('確定刪除？')){data.imaging.splice(i,1);renderImagingTable();saveData();markDataChanged();showToast('已刪除');}}
         function clearAllImaging(){if(!data.imaging.length)return;if(confirm('確定清除？')){data.imaging=[];renderImagingTable();saveData();markDataChanged();showToast('已清除');}}
         
-        function generatePreview(){updateDataFromUI();let p=[];if(data.includePrompt&&data.promptText.trim()){p.push(data.promptText.trim());p.push('─'.repeat(30));}const hp=data.patientName||data.patientAge||data.patientMRN||data.ecog||data.cfs;if(hp){p.push('【病人資料】');if(data.patientMRN)p.push(`病歷號：${data.patientMRN}`);if(data.patientName)p.push(`姓名：${data.patientName}`);if(data.patientAge)p.push(`年齡：${data.patientAge} 歲`);if(data.ecog)p.push(`ECOG: ${data.ecog}`);if(data.cfs)p.push(`衰弱量表: ${data.cfs}${FRAILTY_DESC[data.cfs]?`（${FRAILTY_DESC[data.cfs]}）`:''}`);p.push('─'.repeat(30));}if(data.medicalSummary.trim()){p.push('【病摘】');p.push(data.medicalSummary.trim());p.push('─'.repeat(30));}if(data.labData.trim()||data.tumorMarkers.length){p.push('【檢驗資料】');if(data.labData.trim())p.push(data.labData.trim());if(data.tumorMarkers.length){if(data.labData.trim())p.push('');p.push('腫瘤指數：');const grouped={};data.tumorMarkers.forEach(m=>{if(!grouped[m.type])grouped[m.type]=[];grouped[m.type].push(m);});Object.keys(grouped).sort().forEach(type=>{const items=grouped[type].sort((a,b)=>a.date.localeCompare(b.date));const vals=items.map(m=>`${m.date}: ${m.value}`).join(' → ');p.push(`  ${type}: ${vals}`);});}p.push('─'.repeat(30));}if(data.pathology.length){p.push('【病理報告】');data.pathology.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Category: ${x.category||'Biopsy'}`);p.push('Content:');p.push(x.text.trim());});p.push('─'.repeat(15));}if(data.imaging.length){p.push('【影像報告】');data.imaging.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Type: ${x.type}`);p.push('Content:');p.push(x.text.trim());});p.push('─'.repeat(15));}let result=p.join('\n').trim();result=result.replace(/\n{3,}/g,'\n\n');return result;}
-        function refreshPreview(){let pv=generatePreview();const mk=document.getElementById('maskInfo').checked;if(mk&&data.patientName){const m=getMaskedInfo();pv=pv.replaceAll(data.patientName,m.name);}data.previewText=pv;document.getElementById('previewText').value=pv;dataChanged=false;document.getElementById('previewNotice').className='preview-notice';document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>預覽已更新';saveData();showToast('已產生預覽');}
-        function copyPreview(){const t=document.getElementById('previewText').value;if(!t.trim())return showToast('預覽為空','error');navigator.clipboard.writeText(t).then(()=>showToast('已複製到剪貼簿')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('已複製到剪貼簿');});}
+        function generatePreview(withPrompt){updateDataFromUI();const inc=withPrompt===undefined?data.includePrompt:withPrompt;let p=[];if(inc&&data.promptText.trim()){p.push(data.promptText.trim());p.push('─'.repeat(30));}const hp=data.patientName||data.patientAge||data.patientMRN||data.ecog||data.cfs;if(hp){p.push('【病人資料】');if(data.patientMRN)p.push(`病歷號：${data.patientMRN}`);if(data.patientName)p.push(`姓名：${data.patientName}`);if(data.patientAge)p.push(`年齡：${data.patientAge} 歲`);if(data.ecog)p.push(`ECOG: ${data.ecog}`);if(data.cfs)p.push(`衰弱量表: ${data.cfs}${FRAILTY_DESC[data.cfs]?`（${FRAILTY_DESC[data.cfs]}）`:''}`);p.push('─'.repeat(30));}if(data.medicalSummary.trim()){p.push('【病摘】');p.push(data.medicalSummary.trim());p.push('─'.repeat(30));}if(data.labData.trim()||data.tumorMarkers.length){p.push('【檢驗資料】');if(data.labData.trim())p.push(data.labData.trim());if(data.tumorMarkers.length){if(data.labData.trim())p.push('');p.push('腫瘤指數：');const grouped={};data.tumorMarkers.forEach(m=>{if(!grouped[m.type])grouped[m.type]=[];grouped[m.type].push(m);});Object.keys(grouped).sort().forEach(type=>{const items=grouped[type].sort((a,b)=>a.date.localeCompare(b.date));const vals=items.map(m=>`${m.date}: ${m.value}`).join(' → ');p.push(`  ${type}: ${vals}`);});}p.push('─'.repeat(30));}if(data.pathology.length){p.push('【病理報告】');data.pathology.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Category: ${x.category||'Biopsy'}`);p.push('Content:');p.push(x.text.trim());});p.push('─'.repeat(15));}if(data.imaging.length){p.push('【影像報告】');data.imaging.forEach(x=>{p.push(`Date: ${x.date}`);p.push(`Type: ${x.type}`);p.push('Content:');p.push(x.text.trim());});p.push('─'.repeat(15));}let result=p.join('\n').trim();result=result.replace(/\n{3,}/g,'\n\n');return result;}
+        function applyMask(c){const mk=document.getElementById('maskInfo').checked;if(mk&&data.patientName){const m=getMaskedInfo();c=c.replaceAll(data.patientName,m.name);}return c;}
+        function buildContent(withPrompt){return applyMask(generatePreview(withPrompt));}
+        function updateMaskState(){const el=document.getElementById('maskState');const on=document.getElementById('maskInfo').checked;el.textContent=on?'姓名已遮蔽':'姓名未遮蔽';el.className='mask-state'+(on?'':' off');}
+        function refreshPreview(silent){const pv=buildContent();data.previewText=pv;document.getElementById('previewText').value=pv;updateMaskState();if(!silent)showToast('已更新');}
+        function copyPreview(){refreshPreview(true);const t=document.getElementById('previewText').value;if(!t.trim())return showToast('尚未輸入資料','error');navigator.clipboard.writeText(t).then(()=>showToast('已複製到剪貼簿')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('已複製到剪貼簿');});}
         
-        function updateDataFromUI(){data.promptText=document.getElementById('promptText').value;data.includePrompt=document.getElementById('includePrompt').checked;data.patientName=document.getElementById('patientName').value;data.patientAge=document.getElementById('patientAge').value;data.patientMRN=document.getElementById('patientMRN').value;data.ecog=document.getElementById('ecog').value;data.cfs=document.getElementById('cfs').value;data.medicalSummary=document.getElementById('summaryText').value;data.labData=document.getElementById('labText').value;data.previewText=document.getElementById('previewText').value;}
-        function applyDataToUI(){document.getElementById('promptText').value=data.promptTemplates[selectedTemplateIndex]?.content||'';document.getElementById('includePrompt').checked=data.includePrompt;document.getElementById('patientName').value=data.patientName;document.getElementById('patientAge').value=data.patientAge||'';document.getElementById('patientMRN').value=data.patientMRN;document.getElementById('ecog').value=data.ecog;document.getElementById('cfs').value=data.cfs;document.getElementById('summaryText').value=data.medicalSummary;document.getElementById('labText').value=data.labData;document.getElementById('previewText').value=data.previewText;updatePatientInfoBar();}
-        function saveData(){updateDataFromUI();localStorage.setItem('chart_data',JSON.stringify(data));}
+        function updateDataFromUI(){data.promptText=document.getElementById('promptText').value;data.includePrompt=document.getElementById('includePrompt').checked;data.patientName=document.getElementById('patientName').value;data.patientAge=document.getElementById('patientAge').value;data.patientMRN=document.getElementById('patientMRN').value;data.ecog=document.getElementById('ecog').value;data.cfs=document.getElementById('cfs').value;data.medicalSummary=document.getElementById('summaryText').value;data.labData=document.getElementById('labText').value;data.previewText=document.getElementById('previewText').value;data.aiResult=document.getElementById('aiResultText').value;}
+        function applyDataToUI(){document.getElementById('promptText').value=data.promptTemplates[selectedTemplateIndex]?.content||'';document.getElementById('includePrompt').checked=data.includePrompt;document.getElementById('patientName').value=data.patientName;document.getElementById('patientAge').value=data.patientAge||'';document.getElementById('patientMRN').value=data.patientMRN;document.getElementById('ecog').value=data.ecog;document.getElementById('cfs').value=data.cfs;document.getElementById('summaryText').value=data.medicalSummary;document.getElementById('labText').value=data.labData;document.getElementById('previewText').value=data.previewText;document.getElementById('aiResultText').value=data.aiResult||'';updateResultNotice();updatePatientInfoBar();}
+        function saveData(){clearTimeout(saveTimer);updateDataFromUI();try{localStorage.setItem('chart_data',JSON.stringify(data));setSaveStatus('saved');}catch(e){console.error(e);setSaveStatus('error');}}
         function loadData(){
             // 嘗試讀取新 key
             let s=localStorage.getItem('chart_data');
@@ -1123,10 +1313,11 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
                 }
             }
             if(s)try{data={...data,...JSON.parse(s)};}catch(e){}
+            selectedTemplateIndex=Math.min(9,Math.max(0,parseInt(data.selectedTemplate)||0));
         }
         function clearField(id){document.getElementById(id).value='';saveData();markDataChanged();showToast('已清除');}
         function clearPatientTab(){['patientName','patientMRN','patientAge'].forEach(x=>document.getElementById(x).value='');['ecog','cfs'].forEach(x=>document.getElementById(x).value='');saveData();markDataChanged();updatePatientInfoBar();showToast('已清除');}
-        function clearAll(){if(!confirm('清除所有資料？（保留範本）'))return;const t=data.promptTemplates;data={promptText:'',includePrompt:true,promptTemplates:t,patientName:'',patientAge:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',tumorMarkers:[],pathology:[],imaging:[],previewText:''};applyDataToUI();renderMarkerTable();renderPathologyTable();renderImagingTable();saveData();dataChanged=false;document.getElementById('previewNotice').className='preview-notice';document.getElementById('previewNotice').innerHTML='<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>按「產生預覽」整合各頁資料';updatePatientInfoBar();showToast('已清除');}
+        function clearAll(){if(!confirm('開始新病人？\n將清除目前病人的所有輸入資料與 AI 結果，Prompt 範本不受影響。'))return;patientEpoch++;const t=data.promptTemplates,inc=document.getElementById('includePrompt').checked;data={promptText:'',includePrompt:inc,promptTemplates:t,selectedTemplate:selectedTemplateIndex,patientName:'',patientAge:'',patientMRN:'',ecog:'',cfs:'',medicalSummary:'',labData:'',tumorMarkers:[],pathology:[],imaging:[],previewText:'',aiResult:'',aiStale:false};cancelMarkerEdit();cancelPathologyEdit();cancelImagingEdit();document.getElementById('previewText').value='';applyDataToUI();renderMarkerTable();renderPathologyTable();renderImagingTable();saveData();dataChanged=false;switchTab('patient');document.getElementById('patientMRN').focus();showToast('已清除，可輸入新病人');}
         
         function updatePatientInfoBar(){
             const name=document.getElementById('patientName').value.trim();
@@ -1136,9 +1327,10 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
             if(!name&&!mrn&&!age){bar.classList.remove('show');return;}
             const copyIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
             let html=[];
-            if(mrn)html.push(`<span class="info-item"><span class="info-label">病歷號：</span><span class="info-value">${mrn}</span><button class="copy-btn" onclick="copyInfoValue('${mrn}')" title="複製">${copyIcon}</button></span>`);
-            if(name)html.push(`<span class="info-item"><span class="info-label">姓名：</span><span class="info-value">${name}</span><button class="copy-btn" onclick="copyInfoValue('${name}')" title="複製">${copyIcon}</button></span>`);
-            if(age)html.push(`<span class="info-item"><span class="info-label">年齡：</span><span class="info-value">${age} 歲</span></span>`);
+            if(mrn)html.push(`<span class="info-item"><span class="info-label">病歷號：</span><span class="info-value">${esc(mrn)}</span><button class="copy-btn" data-v="${esc(mrn)}" onclick="copyInfoValue(this.dataset.v)" title="複製">${copyIcon}</button></span>`);
+            if(name)html.push(`<span class="info-item"><span class="info-label">姓名：</span><span class="info-value">${esc(name)}</span><button class="copy-btn" data-v="${esc(name)}" onclick="copyInfoValue(this.dataset.v)" title="複製">${copyIcon}</button></span>`);
+            if(age)html.push(`<span class="info-item"><span class="info-label">年齡：</span><span class="info-value">${esc(age)} 歲</span></span>`);
+            html.push(`<span class="info-item info-counts"><span class="info-label">病理</span><span class="info-value">${data.pathology.length}</span><span class="info-label">影像</span><span class="info-value">${data.imaging.length}</span></span>`);
             bar.innerHTML=html.join('');
             bar.classList.add('show');
         }
@@ -1151,11 +1343,11 @@ Liver cirrhosis w/ S8 hepatic mass, gallbladder sludge/stones, and bilateral hyd
         
         function getMaskedInfo(){let n=data.patientName,m=data.patientMRN;if(n.length>2)n=n[0]+'○'.repeat(n.length-2)+n[n.length-1];else if(n.length===2)n=n[0]+'○';if(m.length>4){const mid=Math.floor(m.length/2);m=m.substring(0,mid-1)+'**'+m.substring(mid+1);}else if(m.length>0)m=m[0]+'**';return{name:n,mrn:m};}
         function sanitizeFilename(t){return t.replace(/[<>:"/\\|?*]/g,'').trim();}
-        function getExportContent(){updateDataFromUI();let c=data.previewText||generatePreview();const mk=document.getElementById('maskInfo').checked;if(mk&&data.patientName){const m=getMaskedInfo();c=c.replaceAll(data.patientName,m.name);}return c;}
+        function getExportContent(src){if(src==='ai'){updateDataFromUI();return applyMask(document.getElementById('aiResultText').value);}return buildContent();}
         function getFilename(ext){const now=new Date(),ds=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;let p=['病歷整理'];if(data.patientName){const s=sanitizeFilename(data.patientName);if(s)p.push(s);}if(data.patientMRN){const s=sanitizeFilename(data.patientMRN);if(s)p.push(s);}p.push(ds);return p.join('_')+'.'+ext;}
-        function exportTXT(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');const b=new Blob([c],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=getFilename('txt');a.click();URL.revokeObjectURL(u);showToast('已匯出');}
-        function exportHTML(){
-            const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');
+        function exportTXT(src){const c=getExportContent(src);if(!c.trim())return showToast('沒有內容可匯出','error');const b=new Blob([c],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=getFilename('txt');a.click();URL.revokeObjectURL(u);showToast('已匯出');}
+        function exportHTML(src){
+            const c=getExportContent(src);if(!c.trim())return showToast('沒有內容可匯出','error');
             const now=new Date();
             const dateStr=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             const escaped=c.replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1194,14 +1386,14 @@ body{font-family:'Noto Sans TC',sans-serif;font-size:14px;line-height:1.8;color:
 <div class="date">產生時間：${dateStr}</div>
 </div>
 <div class="content">${formatted}</div>
-<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.0.6</div>
+<div class="footer">© SELA · Radiation Oncology · CBSHOW · V7.1.0</div>
 </div>
 </body>
 </html>`;
             const b=new Blob([html],{type:'text/html;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');
             a.href=u;a.download=getFilename('html');a.click();URL.revokeObjectURL(u);showToast('已匯出');
         }
-        async function exportPDF(){const c=getExportContent();if(!c.trim())return showToast('預覽為空','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.0.6</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
+        async function exportPDF(src){const c=getExportContent(src);if(!c.trim())return showToast('沒有內容可匯出','error');showToast('產生中...');const pd=document.getElementById('pdfContent');pd.innerHTML=`<div style="font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#1E293B;"><div style="text-align:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #E2E8F0;"><h1 style="font-size:18px;margin:0 0 5px;color:#1E293B;">病歷整理報告</h1><p style="font-size:11px;color:#64748B;margin:0;">SELA Medical Record Organizer V7.1.0</p></div><pre style="white-space:pre-wrap;word-wrap:break-word;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin:0;">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></div>`;try{const cv=await html2canvas(pd,{scale:2,useCORS:true,logging:false}),{jsPDF}=window.jspdf,img=cv.toDataURL('image/png'),pdf=new jsPDF('p','mm','a4'),pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight(),r=Math.min((pw-20)/cv.width,(ph-20)/cv.height),fw=cv.width*r,fh=cv.height*r;let hl=fh,pos=10;pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);while(hl>0){pos=hl-fh+10;pdf.addPage();pdf.addImage(img,'PNG',10,pos,fw,fh);hl-=(ph-20);}pdf.save(getFilename('pdf'));showToast('已匯出');}catch(e){console.error(e);showToast('失敗','error');}pd.innerHTML='';}
         setInterval(saveData,30000);window.addEventListener('beforeunload',saveData);
     </script>
 </body>
